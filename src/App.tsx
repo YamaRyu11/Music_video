@@ -1,21 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowRight, AudioLines, Check, CheckCircle2, CircleHelp,
   FileAudio, FolderOpen, HardDrive, Headphones, LoaderCircle, Maximize2, Monitor, Pause, Play,
-  RotateCcw, Settings2, Smartphone, Upload, Volume2, X } from 'lucide-react';
+  Smartphone, Upload, Volume2, X } from 'lucide-react';
 import { defaultSettings, dimensions, formatTime, MAX_DURATION, MAX_FILE_BYTES, type Analysis, type AudioAsset,
-  type ExportProgress, type StyleId, type VisualSettings } from './shared';
+  type ExportProgress, type VisualSettings } from './shared';
 import { renderScene } from './visuals/render';
-
-const styles: { id: StyleId; title: string; subtitle: string; className: string }[] = [
-  { id: 'orbit', title: 'Neon Orbit', subtitle: '低音に揺れる、光のリング', className: 'art-orbit' },
-  { id: 'spectrum', title: 'Spectrum', subtitle: '音の輪郭を、グラフィックに', className: 'art-spectrum' },
-  { id: 'particles', title: 'Particle Flow', subtitle: '音とともに、粒子が踊る', className: 'art-particles' },
-];
-const colors = ['#b8f36b', '#67e8d0', '#79acff', '#c79cff', '#ff95b5', '#ffbe73'];
+import { styles } from './visuals/catalog';
+import { Customizer } from './components/Customizer';
+import { version } from '../package.json';
 
 function StyleArt({ kind }: { kind: string }) {
   return <div className={`style-art ${kind}`} aria-hidden="true">
-    {kind === 'art-orbit' ? <><i /><i /><i /></> : kind === 'art-spectrum'
+    {['art-orbit', 'art-wave', 'art-tunnel', 'art-aurora'].includes(kind) ? <><i /><i /><i /></> : kind === 'art-spectrum'
       ? Array.from({ length: 24 }, (_, i) => <i key={i} style={{ height: `${15 + Math.sin(i * 0.63) ** 2 * 62}%` }} />)
       : Array.from({ length: 35 }, (_, i) => <i key={i} style={{ left: `${10 + (i * 37 % 83)}%`, top: `${12 + (i * 23 % 78)}%`, opacity: 0.25 + i % 6 / 8 }} />)}
   </div>;
@@ -178,7 +174,7 @@ export function App() {
           {!asset && busy === null && <button className="demo-link" onClick={loadDemo} disabled={locked}><Headphones size={14} />サンプル音源で試す<ArrowRight size={13} /></button>}
         </section>
         <section className="styles-section">
-          <h2><span className="step">02</span>スタイルを選ぶ<span className="section-count">3 STYLES</span></h2>
+          <h2><span className="step">02</span>スタイルを選ぶ<span className="section-count">{styles.length} STYLES</span></h2>
           <div className="style-list">{styles.map(s => <button key={s.id} className={`style-card ${settings.style === s.id ? 'selected' : ''}`}
             disabled={exporting} aria-pressed={settings.style === s.id} onClick={() => update('style', s.id)}>
             <StyleArt kind={s.className} /><span className="style-info"><strong>{s.title}</strong><small>{s.subtitle}</small></span>
@@ -207,15 +203,7 @@ export function App() {
         </div>
         <div className="preview-footnote"><span><span className="status-dot" />プレビューと書き出しは同じ映像エンジン</span><span>FULL HD <span className="divider">/</span> 30 FPS</span></div>
 
-        <section className="adjust-panel">
-          <div className="panel-title"><h2><Settings2 size={16} />映像をカスタマイズ</h2><button className="reset-button" disabled={exporting} onClick={() => setSettings(s => ({ ...defaultSettings, aspect: s.aspect, title: s.title, artist: s.artist }))}><RotateCcw size={13} />リセット</button></div>
-          <fieldset disabled={exporting} className="adjust-grid">
-            <div className="color-control"><label>アクセントカラー</label><div className="swatches">{colors.map(c => <button key={c} title={c} aria-label={`カラー ${c}`} aria-pressed={settings.color === c} className={`swatch ${settings.color === c ? 'chosen' : ''}`} style={{ backgroundColor: c }} onClick={() => update('color', c)}>{settings.color === c && <Check size={13} />}</button>)}<label className="custom-color" title="カスタムカラー"><span>＋</span><input aria-label="カスタムカラー" type="color" value={settings.color} onChange={e => update('color', e.target.value)} /></label></div></div>
-            <div className="slider-control"><label htmlFor="intensity">音への反応<span>{Math.round(settings.intensity * 100)}%</span></label><input id="intensity" type="range" min="0" max="2" step="0.05" value={settings.intensity} onChange={e => update('intensity', Number(e.target.value))} /><div className="slider-labels"><span>穏やか</span><span>ダイナミック</span></div></div>
-            <div className="slider-control"><label htmlFor="smoothing">動きの滑らかさ<span>{Math.round(settings.smoothing * 100)}%</span></label><input id="smoothing" type="range" min="0" max="1" step="0.05" value={settings.smoothing} onChange={e => update('smoothing', Number(e.target.value))} /><div className="slider-labels"><span>シャープ</span><span>なめらか</span></div></div>
-          </fieldset>
-          <fieldset disabled={exporting} className="text-grid"><label>タイトル<input placeholder="曲名を入力（任意）" maxLength={100} value={settings.title} onChange={e => update('title', e.target.value)} /></label><label>アーティスト<input placeholder="アーティスト名を入力（任意）" maxLength={100} value={settings.artist} onChange={e => update('artist', e.target.value)} /></label></fieldset>
-        </section>
+        <Customizer settings={settings} onChange={setSettings} disabled={exporting} />
 
         <section className="export-panel">
           <div className="export-format"><span className="export-icon"><ArrowDownToLine size={20} /></span><div><h3>この音を、一本の映像に。</h3><p>MP4 <span>·</span> H.264 / AAC <span>·</span> フルHD / 30fps</p></div></div>
@@ -225,10 +213,10 @@ export function App() {
         {exporting && <div className="export-progress" role="status"><div><span>{exportStatus?.state === 'encoding' ? '音声と映像をまとめています…' : `映像を生成しています… ${Math.round(progress * 100)}%`}</span><button onClick={() => void window.studio?.cancelExport()}>キャンセル<X size={13} /></button></div><progress max="1" value={progress} /></div>}
         {exportStatus?.state === 'complete' && <div className="success-message" role="status"><CheckCircle2 size={18} /><span>動画を書き出しました。</span><button onClick={() => void window.studio?.revealOutput()}>保存先を開く<FolderOpen size={14} /></button></div>}
         {exportStatus?.state === 'cancelled' && <p className="cancel-message" role="status">書き出しをキャンセルしました。</p>}
-        <footer><span>CREATED BY YOU. POWERED BY SOUND.</span><span>Music Video Studio <span className="footer-version">v0.1.0</span></span></footer>
+        <footer><span>CREATED BY YOU. POWERED BY SOUND.</span><span>Music Video Studio <span className="footer-version">v{version}</span></span></footer>
       </main>
     </div>
     {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源をここにドロップ</h2><p>WAV / MP3</p></div></div>}
-    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>スタイル・縦横・色・音への反応を調整。</li><li>再生して確認し、「動画を書き出す」で保存先を選択。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>初版は250 MB・10分までの音源、30fpsの出力に対応しています。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
+    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>6種類のスタイル・縦横・色・音への反応を調整。</li><li>「レイヤー合成」で映像を重ね、「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>初版は250 MB・10分までの音源、30fpsの出力に対応しています。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;
 }

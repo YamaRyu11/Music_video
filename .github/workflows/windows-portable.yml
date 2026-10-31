@@ -30,6 +30,12 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+      - name: Read app version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Check types
@@ -39,9 +45,10 @@ jobs:
       - name: Build portable application
         run: npm run dist:win
       - name: Attach downloadable portable folder
+        id: artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MusicVideoStudio-Windows-x64
+          name: MusicVideoStudio-${{ steps.version.outputs.version }}-Windows-x64
           path: release/win-unpacked/
           if-no-files-found: error
           retention-days: 30
@@ -51,7 +58,8 @@ jobs:
         run: |
           @"
           ## Download
-          Open **Artifacts → MusicVideoStudio-Windows-x64** at the bottom of this run.
+          [Download Music Video Studio ${{ steps.version.outputs.version }}](${{ steps.artifact.outputs.artifact-url }})
+          Open **Artifacts → MusicVideoStudio-${{ steps.version.outputs.version }}-Windows-x64** at the bottom of this run.
           Extract the downloaded ZIP completely, then launch **Music Video Studio.exe**.
           A GitHub sign-in is required to download Actions artifacts.
           This is an unsigned development build; Windows app startup still needs manual validation.
