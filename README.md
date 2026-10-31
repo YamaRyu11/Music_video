@@ -45,12 +45,15 @@ npm run typecheck
 npm test
 npm run build
 npm run test:e2e
+npm run test:desktop
 ```
 
 - ユニットテスト: FFTの周波数検出、無音、音量差、アタック、位相反転ステレオ、IPC入力検証。
 - エンコードテスト: 同梱FFmpegで実際に生成したMP4を`ffprobe`で検査します。開発機には`ffprobe`を用意してください。
 - ブラウザ操作テスト: 音源読み込み・再生・シーク・3スタイル・縦横切替・不正ファイルの処理。
 - Chromiumは標準で`/usr/bin/chromium`を使用します。別の環境では`CHROMIUM_PATH`に実行ファイルを指定してください。
+- デスクトップ操作テスト: Electron本体から縦横のフルHD動画を生成し、音声・映像・フレーム数・長さを検査。キャンセル時の一時ファイル削除と既存ファイル保持も確認します。GUIセッションと`ffprobe`、検証用の`ffmpeg`が必要です。
+- GUIのないLinux CIではXorgのダミー画面やXvfbを使用し、必要な場合だけ`STUDIO_TEST_NO_SANDBOX=1`を指定します。製品版のサンドボックスは有効です。
 
 ## Windows x64 のZIPを作る
 
@@ -66,6 +69,7 @@ ZIPを**すべて展開**し、`Music Video Studio.exe`を起動します。ア�
 設定・キャッシュ用の`data/`がEXEの隣に作られます。
 
 初版は未署名です。Windows実機での起動・日本語パス・WAV/MP3・両方向の出力確認は配布前に必要です。
+実施済みの確認と未確認事項は[検証記録](docs/VALIDATION.md)を参照してください。
 公開配布向けのFFmpegソース同梱・ライセンス対応は[第三者コンポーネント](docs/THIRD_PARTY.md)を参照してください。
 
 ## 構成
