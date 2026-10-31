@@ -21,6 +21,14 @@ body { min-width: 0; }
 .demo-link { font-size: 9px; gap: 5px; margin-top: 7px; }
 .styles-section { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .style-drag-hint { color: #87967e; font-size: 9px; margin: 0 0 9px; }
+.style-library-controls { flex-shrink: 0; display: grid; gap: 6px; margin: 0 0 9px; }
+.style-library-controls select { width: 100%; min-width: 0; height: 29px; border-radius: 5px; border: 1px solid #343c41; background: #171d21; color: #b5c1bb; font-size: 10px; padding: 4px 6px; }
+.style-search { display: flex; align-items: center; height: 29px; gap: 5px; padding: 0 7px; border-radius: 5px; border: 1px solid #30383d; color: #7f9084; background: #0e1417; }
+.style-search input { flex: 1; min-width: 0; border: none; outline: none; color: #cbd5cb; font-size: 10px; width: 100%; background: transparent; }
+.style-search:focus-within { outline: 1px solid var(--accent); outline-offset: 1px; }
+.style-search button { display: grid; place-items: center; padding: 2px; }
+.style-empty { color: #8c9990; font-size: 10px; padding: 12px 4px; }
+.style-art > svg { display: block; width: 100%; height: 100%; }
 .style-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 7px; min-height: 0; overflow-y: auto; padding: 2px; }
 .style-card { position: relative; flex-direction: column; justify-content: center; gap: 6px; height: 82px; padding: 7px 4px; text-align: center; cursor: grab; user-select: none; }
 .style-card:active { cursor: grabbing; }
