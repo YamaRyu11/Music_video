@@ -1,9 +1,9 @@
 import { sampleFeatures, type Features } from '../audio/analysis';
 import { fontFamilies, type Analysis, type VisualSettings, type StyleId, type TextDesign } from '../shared';
-
-const TAU = Math.PI * 2;
-const noise = (i: number) => { const n = Math.sin(i * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
-const alpha = (hex: string, a: number) => `${hex}${Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0')}`;
+import { TAU, noise, alpha } from './math';
+import { spatialRenderers } from './spatial-styles';
+import { organicRenderers } from './organic-styles';
+import type { StyleRenderer } from './types';
 
 function ambient(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, f: Features, s: VisualSettings) {
   const color = s.color;
@@ -137,7 +137,32 @@ function aurora(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, 
   }
 }
 
-const styleRenderers: Record<StyleId, typeof orbit> = { orbit, spectrum, particles, wave, tunnel, aurora };
+const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
+  const unit = Math.min(w, h), cx = w / 2, cy = h * .46;
+  const width = w * .64, opening = unit * (.05 + f.bass * .075 * s.intensity);
+  const gradient = ctx.createLinearGradient(cx - width / 2, 0, cx + width / 2, 0);
+  gradient.addColorStop(0, alpha(s.color, 0)); gradient.addColorStop(.25, alpha(s.color, .5));
+  gradient.addColorStop(.75, alpha(s.secondaryColor, .5)); gradient.addColorStop(1, alpha(s.secondaryColor, 0));
+  ctx.strokeStyle = gradient; ctx.lineWidth = 1.5;
+  for (const side of [-1, 1]) {
+    ctx.beginPath(); ctx.moveTo(cx - width / 2, cy + side * opening);
+    ctx.lineTo(cx + width / 2, cy + side * opening); ctx.stroke();
+  }
+  for (let i = 0; i < 48; i++) {
+    const x = cx - width / 2 + (i + .5) * width / 48;
+    const height = unit * (.005 + f.bands[i] * .035 * s.intensity);
+    ctx.fillStyle = alpha(i % 2 ? s.color : s.secondaryColor, .2 + f.attack * .45 * s.intensity);
+    ctx.fillRect(x, cy + opening + unit * .02, Math.max(1, unit * .002), height);
+  }
+  for (let i = 0; i < 6; i++) {
+    const y = cy + Math.sin(t * .4 + i) * opening * .5;
+    ctx.fillStyle = alpha(s.color, .12 + f.level * .12 * s.intensity);
+    ctx.fillRect(cx + (i - 2.5) * width * .1, y, unit * .003, unit * .003);
+  }
+};
+
+const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
+  ...spatialRenderers, ...organicRenderers, typography };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings) {
   ctx.save(); styleRenderers[style](ctx, w, h, t, f, s); ctx.restore();
 }
@@ -149,13 +174,23 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number):
   return chars.join('') + '…';
 }
 
-function drawText(ctx: CanvasRenderingContext2D, text: string, d: TextDesign, w: number, h: number) {
+function drawText(ctx: CanvasRenderingContext2D, text: string, d: TextDesign, w: number, h: number,
+  motion?: { time: number; features: Features; intensity: number; glow: number }) {
   if (!d.visible || !text) return;
   ctx.save(); ctx.font = `${d.italic ? 'italic ' : ''}${d.weight} ${d.size}px ${fontFamilies[d.font]}`;
   ctx.textAlign = d.align; ctx.textBaseline = 'middle'; ctx.fillStyle = d.color;
   if (d.shadow) { ctx.shadowColor = '#000000cc'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2; }
   const x = d.align === 'left' ? w * 0.08 : d.align === 'right' ? w * 0.92 : w / 2;
-  ctx.fillText(fitText(ctx, text, w * 0.84), x, h * d.y); ctx.restore();
+  if (motion) {
+    const { time, features: f, intensity, glow } = motion;
+    const sx = 1 + f.level * .16 * intensity, sy = 1 + f.bass * .24 * intensity;
+    const maxY = h - d.size * sy * .65, minY = d.size * sy * .65;
+    const y = Math.min(maxY, Math.max(minY, h * d.y + Math.sin(time * 2) * f.attack * d.size * .16 * intensity));
+    ctx.translate(x, y); ctx.scale(sx, sy);
+    if (d.shadow) { ctx.shadowColor = d.color; ctx.shadowBlur = 8 + f.attack * glow * 36 * intensity; }
+    ctx.fillText(fitText(ctx, text, w * .78 / sx), 0, 0);
+  } else ctx.fillText(fitText(ctx, text, w * 0.84), x, h * d.y);
+  ctx.restore();
 }
 
 interface Surfaces { scene: HTMLCanvasElement; layer: HTMLCanvasElement }
@@ -198,7 +233,16 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   ctx.filter = `saturate(${settings.saturation}) brightness(${settings.brightness})`;
   ctx.drawImage(scene, 0, 0); ctx.filter = 'none';
   ctx.scale(width / w, height / h);
-  drawText(ctx, settings.title, settings.titleDesign, w, h);
+  const motion = { time, features, intensity: settings.intensity, glow: settings.glow };
+  const typographyOverlay = settings.overlay.style === 'typography' ? settings.overlay.opacity : 0;
+  ctx.save(); ctx.globalAlpha = 1 - typographyOverlay;
+  drawText(ctx, settings.title, settings.titleDesign, w, h, settings.style === 'typography' ? motion : undefined);
+  ctx.restore();
+  if (typographyOverlay > 0) {
+    ctx.save(); ctx.globalAlpha = typographyOverlay; ctx.globalCompositeOperation = settings.overlay.blend;
+    drawText(ctx, settings.title, { ...settings.titleDesign, color: settings.overlay.color }, w, h, motion);
+    ctx.restore();
+  }
   drawText(ctx, settings.artist, settings.artistDesign, w, h);
   ctx.restore();
 }

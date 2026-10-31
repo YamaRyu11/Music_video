@@ -1,4 +1,5 @@
-export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'aurora'] as const;
+export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'aurora',
+  'laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography'] as const;
 export type StyleId = typeof STYLE_IDS[number];
 export type Aspect = 'landscape' | 'portrait';
 export type FontId = 'sans' | 'serif' | 'mono' | 'meiryo';
