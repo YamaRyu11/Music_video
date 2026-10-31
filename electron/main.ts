@@ -142,7 +142,7 @@ ipcMain.handle('export:reveal', event => { assertUI(event); if (lastOutput) shel
 
 app.whenReady().then(async () => {
   await mkdir(app.getPath('userData'), { recursive: true });
-  mainWindow = new BrowserWindow({ title: 'Music Video Studio', width: 1340, height: 1020, minWidth: 900, minHeight: 740,
+  mainWindow = new BrowserWindow({ title: 'Music Video Studio', width: 1320, height: 860, minWidth: 900, minHeight: 640,
     backgroundColor: '#101115', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
