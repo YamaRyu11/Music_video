@@ -1,7 +1,9 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import { Bold, Check, Italic, Layers2, Palette, RotateCcw, Settings2, Type } from 'lucide-react';
 import { defaultSettings, type TextDesign, type VisualSettings } from '../shared';
 import { styles } from '../visuals/catalog';
+import { droppedStyle, isStyleDrag } from '../visuals/style-drag';
+import type { StyleId } from '../shared';
 
 const colors = ['#b8f36b', '#67e8d0', '#79acff', '#c79cff', '#ff95b5', '#ffbe73'];
 const palettes = [
@@ -19,11 +21,31 @@ function Slider({ label, value, min, max, step = .05, suffix = '%', scale = 100,
   return <label className="design-slider"><span>{label}<output>{Math.round(value * scale)}{suffix}</output></span><input type="range" aria-label={label} min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} /></label>;
 }
 
-export function Customizer({ settings, onChange, disabled }: {
-  settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>; disabled: boolean;
+function LayerSlot({ slot, disabled, draggingStyle, onStyle, children }: {
+  slot: '01' | '02'; disabled: boolean; draggingStyle: boolean; onStyle: (style: StyleId) => void; children: ReactNode;
+}) {
+  const [hover, setHover] = useState(false);
+  useEffect(() => { if (!draggingStyle || disabled) setHover(false); }, [draggingStyle, disabled]);
+  return <div data-layer-slot={slot} role="group" aria-label={`レイヤー ${slot}`}
+    className={`layer-order ${hover ? 'drop-target' : ''}`} onDragOver={e => {
+      if (disabled || !isStyleDrag(e.dataTransfer)) return;
+      e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'copy'; setHover(true);
+    }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHover(false); }}
+    onDrop={e => {
+      setHover(false); if (!isStyleDrag(e.dataTransfer)) return;
+      e.preventDefault(); e.stopPropagation(); if (disabled) return;
+      const style = droppedStyle(e.dataTransfer); if (style) onStyle(style);
+    }}>
+    <span className="layer-number">{slot}</span><div className="layer-slot-content">{children}<small>左のスタイルをここへドロップ</small></div>
+  </div>;
+}
+
+export function Customizer({ settings, onChange, disabled, draggingStyle = false }: {
+  settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>; disabled: boolean; draggingStyle?: boolean;
 }) {
   const [tab, setTab] = useState<'color' | 'layers' | 'text'>('color');
   const [target, setTarget] = useState<'titleDesign' | 'artistDesign'>('titleDesign');
+  useEffect(() => { if (draggingStyle) setTab('layers'); }, [draggingStyle]);
   const update = <K extends keyof VisualSettings>(key: K, value: VisualSettings[K]) => onChange(s => ({ ...s, [key]: value }));
   const updateLayer = <K extends keyof VisualSettings['overlay']>(key: K, value: VisualSettings['overlay'][K]) => onChange(s => ({ ...s, overlay: { ...s.overlay, [key]: value } }));
   const updateText = <K extends keyof TextDesign>(key: K, value: TextDesign[K]) => onChange(s => ({ ...s, [target]: { ...s[target], [key]: value } }));
@@ -58,8 +80,8 @@ export function Customizer({ settings, onChange, disabled }: {
         </>}
 
         {tab === 'layers' && <>
-          <div className="layer-order"><span className="layer-number">01</span><div><strong>ベース映像</strong><small>{styles.find(s => s.id === settings.style)?.title} · 左のスタイルで変更</small></div></div>
-          <div className={`layer-order ${layerEnabled ? 'layer-active' : ''}`}><span className="layer-number">02</span><label>重ねるスタイル<select aria-label="重ねるスタイル" value={settings.overlay.style} onChange={e => updateLayer('style', e.target.value as VisualSettings['overlay']['style'])}><option value="none">なし（合成しない）</option>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></div>
+          <LayerSlot slot="01" disabled={disabled} draggingStyle={draggingStyle} onStyle={style => update('style', style)}><label>ベース映像<select aria-label="ベースのスタイル" value={settings.style} onChange={e => update('style', e.target.value as StyleId)}>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></LayerSlot>
+          <LayerSlot slot="02" disabled={disabled} draggingStyle={draggingStyle} onStyle={style => updateLayer('style', style)}><label>重ねるスタイル<select aria-label="重ねるスタイル" value={settings.overlay.style} onChange={e => updateLayer('style', e.target.value as VisualSettings['overlay']['style'])}><option value="none">なし（合成しない）</option>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></LayerSlot>
           <fieldset disabled={!layerEnabled} className="design-grid overlay-options">
             <ColorField label="レイヤーの色" value={settings.overlay.color} onChange={v => updateLayer('color', v)} />
             <label>合成方法<select aria-label="合成方法" value={settings.overlay.blend} onChange={e => updateLayer('blend', e.target.value as VisualSettings['overlay']['blend'])}><option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option></select></label>

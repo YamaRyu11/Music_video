@@ -1,0 +1,135 @@
+/* Keep the workspace inside the window; only independent tool panels may scroll. */
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+body { min-width: 0; }
+.app-shell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { height: 58px; flex: 0 0 58px; padding: 0 20px; }
+.brand { font-size: 16px; }
+.brand-symbol { width: 30px; height: 30px; border-radius: 7px; }
+.workspace { flex: 1; min-height: 0; width: 100%; max-width: none; grid-template-columns: 220px minmax(0, 1fr); }
+.sidebar { min-width: 0; min-height: 0; overflow: hidden; padding: 16px 14px; }
+.sidebar h1 { font-size: 20px; margin-top: 7px; }
+.sidebar .intro { display: none; }
+.sidebar-heading .eyebrow { font-size: 8px; }
+.sidebar section { margin-top: 18px; }
+.sidebar h2 { font-size: 11px; gap: 6px; margin-bottom: 9px; }
+.drop-zone { padding: 12px 7px 10px; }
+.upload-icon, .has-audio .upload-icon { padding: 5px; margin-bottom: 8px; }
+.upload-icon svg { width: 19px; height: 19px; }
+.drop-zone strong { font-size: 11px; }
+.drop-zone > span:not(.upload-icon) { font-size: 9px; margin-top: 5px; }
+.drop-zone small { font-size: 8px; margin-top: 7px; }
+.demo-link { font-size: 9px; gap: 5px; margin-top: 7px; }
+.styles-section { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.style-drag-hint { color: #87967e; font-size: 9px; margin: 0 0 9px; }
+.style-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 7px; min-height: 0; overflow-y: auto; padding: 2px; }
+.style-card { position: relative; flex-direction: column; justify-content: center; gap: 6px; height: 82px; padding: 7px 4px; text-align: center; cursor: grab; user-select: none; }
+.style-card:active { cursor: grabbing; }
+.style-card .style-art { width: 40px; height: 40px; pointer-events: none; }
+.style-info { max-width: 100%; pointer-events: none; }
+.style-info strong { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.style-info small { display: none; }
+.style-check { position: absolute; top: 5px; right: 5px; width: 12px; height: 12px; }
+.style-check svg { width: 10px; height: 10px; }
+.sidebar-bottom { flex: 0 0 auto; padding: 12px 2px 0; gap: 8px; }
+.sidebar-bottom div { gap: 3px; }
+.sidebar-bottom strong { font-size: 9px; }
+.sidebar-bottom span { font-size: 8px; }
+.main-content { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; padding: 15px 18px 8px; }
+.workspace-title { flex: 0 0 auto; min-height: 42px; margin-bottom: 12px; gap: 12px; }
+.workspace-title h2 { margin-top: 5px; font-size: 18px; }
+.workspace-title .eyebrow { font-size: 8px; }
+.aspect-switch button { padding: 7px 10px; }
+.editor-grid { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 38%); grid-template-rows: minmax(0, 1fr); gap: 16px; min-width: 0; min-height: 0; }
+.preview-column { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.preview-stage { flex: 1; min-height: 0; width: 100%; height: auto; aspect-ratio: auto; container-type: size; background: #080d13; }
+.preview-stage.portrait { background: #080d13; }
+.preview-stage canvas { width: min(100cqw, calc(100cqh * 1.777777778)); height: auto; max-width: none; max-height: none; aspect-ratio: 16 / 9; }
+.preview-stage.portrait canvas { width: min(100cqw, calc(100cqh * .5625)); height: auto; aspect-ratio: 9 / 16; }
+.preview-stage:fullscreen { flex: none; width: 100vw; height: 100dvh; }
+.preview-top { left: 12px; right: 12px; top: 12px; }
+.preview-top > span:last-child { font-size: 8px; }
+.empty-caption { left: 10px; right: 10px; bottom: 16px; font-size: 9px; }
+.transport { flex: 0 0 34px; margin-top: 10px; gap: 8px; }
+.play-button { width: 30px; height: 30px; flex-shrink: 0; }
+.timeline { min-width: 0; height: 26px; }
+.waveform { gap: 1px; }
+.waveform i { min-width: 0; }
+.time-current, .time-total { font-size: 9px; }
+.preview-footnote { flex: 0 0 auto; min-height: 18px; padding: 7px 0 0; font-size: 8px; gap: 8px; }
+.preview-footnote > span { white-space: nowrap; }
+.preview-footnote > span:last-child { font-size: 7px; }
+.adjust-panel { container-type: inline-size; display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 14px; overflow: hidden; }
+.panel-title { flex-shrink: 0; margin-bottom: 10px; }
+.design-tabs { flex-shrink: 0; margin-bottom: 11px; padding-bottom: 10px; gap: 2px; }
+.design-tabs button { flex: 1; padding: 8px 5px; font-size: 10px; gap: 5px; white-space: nowrap; }
+.adjust-panel [role=tabpanel] { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; padding: 2px 4px 4px 0; }
+.palette-presets { gap: 5px; margin-bottom: 16px; }
+.palette-preset { font-size: 9px; gap: 5px; padding: 4px 7px; }
+.palette-preset > span { width: 11px; height: 11px; }
+.design-grid { gap: 14px; margin-top: 16px; }
+.design-grid.three-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.design-grid.separated { padding-top: 14px; }
+.design-fields label { font-size: 10px; }
+.design-fields .color-control > label { margin-bottom: 10px; }
+.swatches { gap: 8px; }
+.design-slider > span { margin-bottom: 8px; }
+.color-field-value, .design-fields select { height: 32px; margin-top: 6px; }
+.design-fields select { padding: 6px; font-size: 10px; }
+.layer-order { padding: 10px; gap: 9px; margin-top: 0; margin-bottom: 9px; border: 1px dashed #465247; transition: border-color .15s, background .15s; }
+.layer-slot-content { flex: 1; min-width: 0; }
+.layer-slot-content > small { display: block; color: #798978; font-size: 8px; margin-top: 7px; }
+.layer-order.drop-target { border: 1px solid #b8f36b; background: #b8f36b18; box-shadow: inset 0 0 0 1px #b8f36b55; }
+.layer-order.drop-target .layer-number { color: #17220e; background: #b8f36b; }
+.layer-order .layer-number { width: 25px; height: 25px; }
+.field-note { font-size: 9px; margin-top: 9px; }
+.text-inputs { gap: 10px; }
+.text-grid input { margin-top: 6px; padding: 8px; font-size: 10px; }
+.text-target { margin-top: 14px; padding-top: 12px; gap: 6px; }
+.text-target button { font-size: 9px; padding: 7px; }
+.text-design { gap: 14px 10px; }
+.font-toggles { gap: 5px; }
+.font-toggles button { font-size: 10px; padding: 7px; gap: 4px; }
+.text-checks { gap: 12px; margin-top: 15px; }
+.text-checks label { font-size: 9px; }
+.export-dock { flex: 0 0 auto; padding-top: 12px; }
+.export-panel { padding: 0; gap: 12px; }
+.export-format h3 { font-size: 11px; }
+.export-format p { margin-top: 6px; font-size: 9px; }
+.export-icon { width: 34px; height: 34px; }
+.export-button { padding: 11px 16px; white-space: nowrap; }
+.browser-note { font-size: 8px; margin: 6px 0 0; }
+.export-progress { padding: 7px 0 0; }
+.export-progress > div { font-size: 10px; }
+.export-progress progress { margin-top: 7px; height: 4px; }
+.success-message { padding: 8px 10px; margin: 7px 0 0; font-size: 11px; }
+.cancel-message { margin-top: 7px; }
+.error-message { flex: 0 0 auto; max-height: 65px; overflow-y: auto; margin: 0 0 9px; padding: 9px; font-size: 11px; }
+footer { flex: 0 0 auto; padding: 7px 0 0; margin-top: 7px; border-top: none; }
+footer > span:first-child { font-size: 7px; }
+footer > span:last-child { font-size: 8px; }
+.help-modal { max-height: calc(100dvh - 40px); overflow-y: auto; }
+* { scrollbar-width: thin; scrollbar-color: #3e4c3b transparent; }
+@container (min-width: 380px) { .design-grid.three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1180px) {
+  .workspace { grid-template-columns: 190px minmax(0, 1fr); }
+  .main-content { padding: 12px 14px 8px; }
+  .landscape .editor-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(110px, .9fr) minmax(190px, 1.1fr); gap: 12px; }
+  .portrait .editor-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 48%); gap: 12px; }
+  .preview-footnote > span:first-child { display: none; }
+  .preview-footnote { justify-content: flex-end; }
+  .portrait .volume-icon { display: none; }
+  .preview-badge { display: none; }
+  footer > span:first-child { display: none; }
+  footer { justify-content: flex-end; }
+}
+@media (max-height: 760px) {
+  .sidebar { padding: 12px; }
+  .sidebar-heading { display: none; }
+  .sidebar h1 { margin-top: 0; font-size: 18px; }
+  .sidebar section { margin-top: 14px; }
+  .sidebar-bottom { padding-top: 8px; }
+  .topbar { height: 52px; flex-basis: 52px; }
+  .workspace-title .eyebrow { display: none; }
+  .workspace-title { min-height: 34px; margin-bottom: 10px; }
+  .workspace-title h2 { margin-top: 0; }
+}

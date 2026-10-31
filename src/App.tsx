@@ -8,6 +8,7 @@ import { renderScene } from './visuals/render';
 import { styles } from './visuals/catalog';
 import { Customizer } from './components/Customizer';
 import { version } from '../package.json';
+import { STYLE_DRAG_TYPE } from './visuals/style-drag';
 
 function StyleArt({ kind }: { kind: string }) {
   return <div className={`style-art ${kind}`} aria-hidden="true">
@@ -33,6 +34,7 @@ export function App() {
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [drag, setDrag] = useState(false);
+  const [draggingStyle, setDraggingStyle] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<ExportProgress>();
   const [help, setHelp] = useState(false);
@@ -143,10 +145,12 @@ export function App() {
   const locked = exporting || busy !== null;
   const progress = exportStatus && 'progress' in exportStatus ? exportStatus.progress : 0;
 
-  return <div className="app-shell" onDragOver={e => { e.preventDefault(); if (!locked) setDrag(true); }}
+  return <div className="app-shell" onDragOver={e => {
+    if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); if (!locked) setDrag(true); }
+  }}
     onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDrag(false); }}
     onDrop={async e => {
-      e.preventDefault(); setDrag(false); if (locked) return;
+      e.preventDefault(); setDrag(false); if (locked || !e.dataTransfer.types.includes('Files')) return;
       const file = e.dataTransfer.files[0]; if (!file) return;
       try { if (window.studio) await importDesktop(await window.studio.importDrop(file)); else await loadAudio(file); }
       catch (err) { setError(err instanceof Error ? err.message : String(err)); }
@@ -175,7 +179,15 @@ export function App() {
         </section>
         <section className="styles-section">
           <h2><span className="step">02</span>スタイルを選ぶ<span className="section-count">{styles.length} STYLES</span></h2>
+          <p className="style-drag-hint">01 / 02 へドラッグして合成</p>
           <div className="style-list">{styles.map(s => <button key={s.id} className={`style-card ${settings.style === s.id ? 'selected' : ''}`}
+            aria-label={`${s.title} ${s.subtitle}`}
+            draggable={!exporting} title={`${s.title} · ${s.subtitle} · 01 / 02 へドラッグ`}
+            onDragStart={e => {
+              if (exporting) { e.preventDefault(); return; }
+              e.dataTransfer.setData(STYLE_DRAG_TYPE, s.id); e.dataTransfer.effectAllowed = 'copy';
+              setDraggingStyle(true);
+            }} onDragEnd={() => setDraggingStyle(false)}
             disabled={exporting} aria-pressed={settings.style === s.id} onClick={() => update('style', s.id)}>
             <StyleArt kind={s.className} /><span className="style-info"><strong>{s.title}</strong><small>{s.subtitle}</small></span>
             <span className="style-check">{settings.style === s.id && <Check size={12} />}</span>
@@ -184,11 +196,13 @@ export function App() {
         <div className="sidebar-bottom"><HardDrive size={15} /><div><strong>ローカルで完結</strong><span>音源は外部へ送信されません</span></div></div>
       </aside>
 
-      <main className="main-content">
+      <main className={`main-content ${settings.aspect}`}>
         <div className="workspace-title"><div><span className="eyebrow">MAKE YOUR SOUND VISIBLE</span><h2>プレビュー<span className="preview-badge">LIVE PREVIEW</span></h2></div>
           <div className="aspect-switch" aria-label="動画の向き"><button disabled={exporting} aria-pressed={settings.aspect === 'landscape'} className={settings.aspect === 'landscape' ? 'active' : ''} onClick={() => update('aspect', 'landscape')}><Monitor size={15} />横 16:9</button><button disabled={exporting} aria-pressed={settings.aspect === 'portrait'} className={settings.aspect === 'portrait' ? 'active' : ''} onClick={() => update('aspect', 'portrait')}><Smartphone size={15} />縦 9:16</button></div>
         </div>
         {(error || exportStatus?.state === 'error') && <div className="error-message" role="alert"><span>{error || (exportStatus?.state === 'error' ? exportStatus.message : '')}</span><button aria-label="エラーを閉じる" onClick={() => { setError(''); setExportStatus(undefined); }}><X size={16} /></button></div>}
+        <div className="editor-grid">
+        <section className="preview-column" aria-label="映像プレビューと再生">
         <div className={`preview-stage ${settings.aspect}`} ref={preview}>
           <canvas ref={canvas} aria-label={`${selected.title} の映像プレビュー`} />
           <div className="preview-top"><span><span className="status-dot" />{selected.title}</span><span>{settings.aspect === 'portrait' ? '1080 × 1920' : '1920 × 1080'}</span></div>
@@ -202,9 +216,12 @@ export function App() {
           <span className="time-total">{formatTime(duration)}</span><Volume2 className="volume-icon" size={17} />
         </div>
         <div className="preview-footnote"><span><span className="status-dot" />プレビューと書き出しは同じ映像エンジン</span><span>FULL HD <span className="divider">/</span> 30 FPS</span></div>
+        </section>
 
-        <Customizer settings={settings} onChange={setSettings} disabled={exporting} />
+        <Customizer settings={settings} onChange={setSettings} disabled={exporting} draggingStyle={draggingStyle} />
+        </div>
 
+        <div className="export-dock">
         <section className="export-panel">
           <div className="export-format"><span className="export-icon"><ArrowDownToLine size={20} /></span><div><h3>この音を、一本の映像に。</h3><p>MP4 <span>·</span> H.264 / AAC <span>·</span> フルHD / 30fps</p></div></div>
           <button className="export-button" onClick={startExport} disabled={!asset?.id || !analysis || locked || !window.studio}>{exporting ? <LoaderCircle size={17} className="spin" /> : <ArrowDownToLine size={17} />}{exporting ? '書き出し中…' : '動画を書き出す'}{!exporting && <ArrowRight size={17} />}</button>
@@ -213,10 +230,11 @@ export function App() {
         {exporting && <div className="export-progress" role="status"><div><span>{exportStatus?.state === 'encoding' ? '音声と映像をまとめています…' : `映像を生成しています… ${Math.round(progress * 100)}%`}</span><button onClick={() => void window.studio?.cancelExport()}>キャンセル<X size={13} /></button></div><progress max="1" value={progress} /></div>}
         {exportStatus?.state === 'complete' && <div className="success-message" role="status"><CheckCircle2 size={18} /><span>動画を書き出しました。</span><button onClick={() => void window.studio?.revealOutput()}>保存先を開く<FolderOpen size={14} /></button></div>}
         {exportStatus?.state === 'cancelled' && <p className="cancel-message" role="status">書き出しをキャンセルしました。</p>}
+        </div>
         <footer><span>CREATED BY YOU. POWERED BY SOUND.</span><span>Music Video Studio <span className="footer-version">v{version}</span></span></footer>
       </main>
     </div>
     {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源をここにドロップ</h2><p>WAV / MP3</p></div></div>}
-    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>6種類のスタイル・縦横・色・音への反応を調整。</li><li>「レイヤー合成」で映像を重ね、「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>初版は250 MB・10分までの音源、30fpsの出力に対応しています。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
+    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>6種類のスタイル・縦横・色・音への反応を調整。</li><li>左のスタイルを01 / 02へドラッグして映像を重ね、「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>初版は250 MB・10分までの音源、30fpsの出力に対応しています。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;
 }
