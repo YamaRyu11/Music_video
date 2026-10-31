@@ -1,0 +1,11 @@
+node_modules/
+dist/
+desktop-dist/
+release/
+.cache/
+test-results/
+playwright-report/
+*.log
+*.tsbuildinfo
+.DS_Store
+public/demo.wav
