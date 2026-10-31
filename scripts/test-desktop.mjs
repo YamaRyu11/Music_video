@@ -19,9 +19,22 @@ try {
   await page.getByRole('button', { name: 'サンプル音源で試す' }).click();
   await expect(page.locator('.drop-zone strong')).toHaveText('demo.wav', { timeout: 30_000 });
   await expect(page.getByRole('button', { name: '動画を書き出す' })).toBeEnabled();
+  await page.getByRole('button', { name: /Aurora 空間/ }).click();
+  await page.getByRole('button', { name: 'Ocean', exact: true }).click();
+  await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+  await page.getByRole('combobox', { name: '重ねるスタイル' }).selectOption('particles');
+  await page.getByRole('slider', { name: 'レイヤーの不透明度' }).fill('0.6');
+  await page.getByLabel('レイヤーの色', { exact: true }).fill('#79acff');
+  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await page.getByPlaceholder('曲名を入力（任意）').fill('TEST TYPOGRAPHY');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('テストアーティスト');
-  await mkdir('test-results', { recursive: true });
-  await page.screenshot({ path: 'test-results/desktop-studio.png', fullPage: true });
+  await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('90');
+  await page.getByLabel('文字色', { exact: true }).fill('#ff245f');
+  await page.getByRole('combobox', { name: 'フォント', exact: true }).selectOption('serif');
+  await page.getByRole('button', { name: '太字', exact: true }).click();
+  await page.getByRole('button', { name: '斜体', exact: true }).click();
+  await mkdir('.cache/desktop-test-results', { recursive: true });
+  await page.screenshot({ path: '.cache/desktop-test-results/desktop-studio.png', fullPage: true });
   for (const aspect of ['landscape', 'portrait']) {
     const outputPath = path.join(temporary, `日本語-${aspect}.mp4`);
     await app.evaluate(({ dialog }, output) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: output }); }, outputPath);
@@ -33,7 +46,13 @@ try {
       await page.locator('.drop-zone').click();
       await expect(page.locator('.drop-zone strong')).toHaveText('日本語音源.mp3', { timeout: 30_000 });
       await page.getByRole('button', { name: '縦 9:16' }).click();
-      await page.getByRole('button', { name: /Spectrum 音の輪郭/ }).click();
+      await page.getByRole('button', { name: /Pulse Tunnel/ }).click();
+      await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+      await page.getByRole('combobox', { name: '重ねるスタイル' }).selectOption('wave');
+      await page.getByRole('combobox', { name: '合成方法' }).selectOption('lighter');
+      await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+      // Importing a new audio source replaces its title, but retains the typography.
+      await page.getByPlaceholder('曲名を入力（任意）').fill('TEST TYPOGRAPHY');
     }
     await page.getByRole('button', { name: '動画を書き出す' }).click();
     await expect(page.locator('.success-message')).toContainText('動画を書き出しました', { timeout: 180_000 });
@@ -45,8 +64,14 @@ try {
     assert.equal(video.nb_frames, '240'); assert.equal(video.r_frame_rate, '30/1'); assert.equal(video.pix_fmt, 'yuv420p');
     assert.ok(Math.abs(Number(probe.format.duration) - 8) < .1);
     // Decode a frame as additional evidence that the output is playable.
-    execFileSync('ffmpeg', ['-v', 'error', '-y', '-ss', '2', '-i', outputPath, '-frames:v', '1', '-threads', '1', path.join('test-results', `export-${aspect}.png`)]);
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-ss', '2', '-i', outputPath, '-frames:v', '1', '-threads', '1', path.join('.cache/desktop-test-results', `export-${aspect}.png`)]);
+    // Pink is used only by the edited title; confirm its chosen color/size reached the MP4.
+    const rgb = execFileSync('ffmpeg', ['-v', 'error', '-ss', '2', '-i', outputPath, '-frames:v', '1', '-vf', 'crop=iw:160:0:trunc(ih*0.79)-80', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-threads', '1', 'pipe:1'], { maxBuffer: 1920 * 160 * 3 + 1024 });
+    let pink = 0;
+    for (let p = 0; p < rgb.length; p += 3) if (rgb[p] > 190 && rgb[p + 1] < 120 && rgb[p + 2] > 35 && rgb[p + 2] < 180) pink++;
+    assert.ok(pink > 1000, `Edited title is missing from exported frame (${pink} matching pixels)`);
     console.log(`PASS: ${aspect} (${aspect === 'portrait' ? 'MP3' : 'WAV'} input) H.264/AAC, ${video.width}x${video.height}, 30fps, 240 frames, 8 seconds`);
+    console.log(`PASS: composite with edited 90px bold italic title (${pink} pink title pixels)`);
   }
   const protectedOutput = path.join(temporary, 'keep-existing.mp4');
   await writeFile(protectedOutput, 'existing output stays intact');
