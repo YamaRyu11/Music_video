@@ -1,0 +1,58 @@
+name: Windows portable build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows-portable.yml'
+      - 'src/**'
+      - 'electron/**'
+      - 'scripts/**'
+      - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'index.html'
+      - 'tsconfig.json'
+      - 'vite.config.ts'
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    name: Build Windows x64 ZIP
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check types
+        run: npm run typecheck
+      - name: Check audio analysis and IPC validation
+        run: npx vitest run tests/analysis.test.ts tests/validation.test.ts
+      - name: Build portable application
+        run: npm run dist:win
+      - name: Attach downloadable portable folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: MusicVideoStudio-Windows-x64
+          path: release/win-unpacked/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+      - name: Explain download
+        shell: pwsh
+        run: |
+          @"
+          ## Download
+          Open **Artifacts → MusicVideoStudio-Windows-x64** at the bottom of this run.
+          Extract the downloaded ZIP completely, then launch **Music Video Studio.exe**.
+          A GitHub sign-in is required to download Actions artifacts.
+          This is an unsigned development build; Windows app startup still needs manual validation.
+          "@ >> $env:GITHUB_STEP_SUMMARY
