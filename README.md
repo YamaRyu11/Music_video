@@ -57,6 +57,19 @@ npm run test:desktop
 
 ## Windows x64 のZIPを作る
 
+### ブラウザからダウンロード
+
+クラウド内の`/workspace/...`へのリンクは、PCへ保存できるダウンロードURLではありません。
+GitHubでこのリポジトリの **Actions → Windows portable build → 成功した実行** を開き、
+画面下部の **Artifacts → MusicVideoStudio-Windows-x64** をクリックしてください。
+GitHubへのログインが必要です。成果物の保存期間は30日です。
+期限が切れた場合は **Run workflow** で再作成できます。
+
+ダウンロードされたZIPをすべて展開し、`Music Video Studio.exe`を起動します。
+このワークフローはビルド成果物をActionsに添付します。GitHub Releaseの公開は行いません。
+
+### 手元でビルド
+
 ```sh
 npm run dist:win
 ```
