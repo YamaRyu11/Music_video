@@ -1,6 +1,7 @@
 import { alpha } from './math';
 import { getTerrainTrack, moodAtDistance, travelAt, type TerrainTrack } from './terrain-track';
 import type { StyleRenderer } from './types';
+import { MAX_INTENSITY } from '../shared';
 
 const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -43,7 +44,7 @@ function valleyHalfWidth(worldZ: number, track: TerrainTrack): number {
  */
 export function terrainElevation(x: number, worldZ: number, track: TerrainTrack, intensity: number): number {
   if (!Number.isFinite(x) || !Number.isFinite(worldZ) || !Number.isFinite(intensity)) return 0;
-  const amount = clamp(intensity, 0, 2), timbre = clamp(track.timbre, 0, 1);
+  const amount = clamp(intensity, 0, MAX_INTENSITY), timbre = clamp(track.timbre, 0, 1);
   const local = x - terrainValleyCenter(worldZ, track), side = local < 0 ? -1 : 1;
   const distance = Math.abs(local), channel = side < 0 ? 31 : 47;
   const width = valleyHalfWidth(worldZ, track);

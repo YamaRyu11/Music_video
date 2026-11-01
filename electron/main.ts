@@ -4,18 +4,21 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createEncoder } from './encoder';
 import { validateExport } from './validation';
-import { MAX_FILE_BYTES, OUTPUT_FPS, type ExportProgress, type ExportSpec } from '../src/shared';
+import { MAX_FILE_BYTES, OUTPUT_FPS, type ExportProgress, type ExportSpec, type BitmapAsset } from '../src/shared';
+import { readBitmapAsset } from './bitmap-assets';
 
 // Portable ZIP builds keep preferences/cache next to the executable, not in AppData.
 if (app.isPackaged) app.setPath('userData', path.join(path.dirname(process.execPath), 'data'));
 const devURL = !app.isPackaged ? process.env.STUDIO_DEV_URL : undefined;
 let mainWindow: BrowserWindow | undefined;
 const assets = new Map<string, { path: string; name: string }>();
+const bitmaps = new Map<string, BitmapAsset>();
 let lastOutput: string | undefined;
 let choosingOutput = false;
 interface Job {
   id: string; spec: ExportSpec; window: BrowserWindow; output: string; temporary: string;
   encoder: ReturnType<typeof createEncoder>; frame: number; finishing: boolean;
+  bitmapAsset?: BitmapAsset;
   timeout?: ReturnType<typeof setTimeout>;
 }
 let job: Job | undefined;
@@ -70,11 +73,23 @@ ipcMain.handle('audio:choose', async event => {
 ipcMain.handle('audio:demo', event => { assertUI(event); return loadAsset(path.join(app.getAppPath(), devURL ? 'public' : 'dist', 'demo.wav')); });
 ipcMain.handle('audio:drop', (event, filePath: string) => { assertUI(event); return loadAsset(filePath); });
 ipcMain.handle('audio:release', (event, id: string) => { assertUI(event); if (job?.spec.assetId !== id) assets.delete(id); });
+async function retainBitmap(filePath: string) {
+  const bitmap = await readBitmapAsset(filePath); bitmaps.set(bitmap.id, bitmap); return bitmap;
+}
+ipcMain.handle('bitmap:choose', async event => {
+  assertUI(event);
+  const result = await dialog.showOpenDialog(mainWindow!, { title: '背景画像を選ぶ', properties: ['openFile'], filters: [{ name: 'ビットマップ画像', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'] }] });
+  return result.canceled ? null : retainBitmap(result.filePaths[0]);
+});
+ipcMain.handle('bitmap:drop', (event, filePath: string) => { assertUI(event); return retainBitmap(filePath); });
+ipcMain.handle('bitmap:release', (event, id: string) => { assertUI(event); if (job?.spec.bitmapId !== id) bitmaps.delete(id); });
 
 ipcMain.handle('export:start', async (event, spec: ExportSpec) => {
   assertUI(event); validateExport(spec);
   if (job || choosingOutput) throw new Error('別の動画を書き出しています。');
   const source = assets.get(spec.assetId); if (!source) throw new Error('音源を読み込み直してください。');
+  const bitmapAsset = spec.bitmapId ? bitmaps.get(spec.bitmapId) : undefined;
+  if (spec.bitmapId && !bitmapAsset) throw new Error('背景画像を読み込み直してください。');
   choosingOutput = true;
   try {
     const result = await dialog.showSaveDialog(mainWindow!, {
@@ -89,7 +104,7 @@ ipcMain.handle('export:start', async (event, spec: ExportSpec) => {
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false },
     });
     lockWindow(renderer);
-    const active: Job = { id: randomUUID(), spec, window: renderer, output, temporary,
+    const active: Job = { id: randomUUID(), spec, window: renderer, output, temporary, bitmapAsset,
       encoder: createEncoder(ffmpegPath(), source.path, temporary, spec.analysis.duration, spec.settings.aspect), frame: 0, finishing: false };
     job = active; resetTimeout(active);
     void active.encoder.done.catch(error => { if (job === active) void stopJob(active, { state: 'error', message: String(error.message) }); });
@@ -101,7 +116,7 @@ ipcMain.handle('export:start', async (event, spec: ExportSpec) => {
   } finally { choosingOutput = false; }
 });
 ipcMain.on('render:ready', event => {
-  if (job && event.sender === job.window.webContents && event.senderFrame === job.window.webContents.mainFrame) job.window.webContents.send('render:start', { ...job.spec, jobId: job.id });
+  if (job && event.sender === job.window.webContents && event.senderFrame === job.window.webContents.mainFrame) job.window.webContents.send('render:start', { ...job.spec, jobId: job.id, bitmapAsset: job.bitmapAsset });
 });
 ipcMain.handle('render:frame', async (event, id: string, index: number, bytes: ArrayBuffer) => {
   const active = job;

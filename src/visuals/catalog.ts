@@ -31,4 +31,8 @@ export const styles: StyleDefinition[] = [
   { id: 'wire-tube', title: 'Warp Tunnel', subtitle: '音でねじれる、立体メッシュの筒', className: 'art-wire-tube', category: 'wireframe' },
   { id: 'wire-orb', title: 'Resonant Orb', subtitle: '音色が浮き上がる、回転する球体', className: 'art-wire-orb', category: 'wireframe' },
   { id: 'wire-city', title: 'Wireframe Metropolis', subtitle: '音と進む、ワイヤー都市の道', className: 'art-wire-city', category: 'wireframe' },
+  { id: 'flowfield', title: 'Flow Field', subtitle: '音色が織る、渦巻く流線', className: 'art-flowfield', category: 'organic' },
+  { id: 'chladni', title: 'Chladni Sand', subtitle: '音の節に集まる、光の砂紋', className: 'art-chladni', category: 'geometry' },
+  { id: 'moire', title: 'Moire Weave', subtitle: '重なる線がつくる、干渉の織物', className: 'art-moire', category: 'geometry' },
+  { id: 'helix', title: 'Ribbon Helix', subtitle: '音でほどける、立体の二重らせん', className: 'art-helix', category: 'space' },
 ];

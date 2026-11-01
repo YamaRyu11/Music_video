@@ -7,10 +7,12 @@ import assert from 'node:assert/strict';
 
 // Exercise every added style through the actual UI, IPC, render window and encoder.
 const wireframes = process.argv.includes('--wireframes');
-const newStyles = wireframes ? ['terrain', 'wire-tube', 'wire-orb', 'wire-city']
+const generative = process.argv.includes('--generative');
+const newStyles = generative ? ['flowfield', 'chladni', 'moire', 'helix'] : wireframes ? ['terrain', 'wire-tube', 'wire-orb', 'wire-city']
   : ['laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography'];
+const mode = generative ? 'generative' : wireframes ? 'wireframes' : 'new-styles';
 const temporary = await mkdtemp(path.join(os.tmpdir(), wireframes ? 'musicvideo-wireframes-' : 'musicvideo-new-styles-'));
-const diagnostics = path.resolve(wireframes ? '.cache/wireframe-export-tests' : '.cache/new-style-export-tests');
+const diagnostics = path.resolve(generative ? '.cache/generative-export-tests' : wireframes ? '.cache/wireframe-export-tests' : '.cache/new-style-export-tests');
 const platform = process.platform === 'win32' ? 'win32-x64/ffmpeg.exe' : 'linux-x64/ffmpeg';
 const ffmpeg = path.resolve(`node_modules/@ffmpeg-installer/${platform}`);
 const ffprobe = process.env.FFPROBE_PATH || 'ffprobe';
@@ -41,9 +43,13 @@ try {
   await expect(page.locator('.export-button')).toBeEnabled();
 
   await page.getByRole('button', { name: 'Ocean', exact: true }).click();
+  if (generative) {
+    await page.getByRole('slider', { name: '音への反応', exact: true }).fill('10');
+    await page.getByRole('slider', { name: '動きの滑らかさ', exact: true }).fill('2');
+  }
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
   await page.getByPlaceholder('曲名を入力（任意）').fill('NEW STYLE TEST');
-  await page.getByPlaceholder('アーティスト名を入力（任意）').fill(wireframes ? 'ワイヤーフレーム・合成検証' : '新10スタイル・合成検証');
+  await page.getByPlaceholder('アーティスト名を入力（任意）').fill(generative ? '新4スタイル・合成検証' : wireframes ? 'ワイヤーフレーム・合成検証' : '新10スタイル・合成検証');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('70');
   await page.getByLabel('文字色', { exact: true }).fill('#ff245f');
   await page.getByRole('button', { name: '太字', exact: true }).click();
@@ -108,6 +114,6 @@ try {
   try { if (app) await app.close(); }
   finally {
     await rm(temporary, { recursive: true, force: true });
-    await writeFile(path.join(diagnostics, 'metrics.json'), JSON.stringify({ startedAt, mode: wireframes ? 'wireframes' : 'new-styles', success, pageErrors, exports: metrics }, null, 2) + '\n');
+    await writeFile(path.join(diagnostics, 'metrics.json'), JSON.stringify({ startedAt, mode, success, pageErrors, exports: metrics }, null, 2) + '\n');
   }
 }

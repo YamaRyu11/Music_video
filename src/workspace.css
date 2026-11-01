@@ -89,6 +89,14 @@ body { min-width: 0; }
 .layer-order.drop-target { border: 1px solid #b8f36b; background: #b8f36b18; box-shadow: inset 0 0 0 1px #b8f36b55; }
 .layer-order.drop-target .layer-number { color: #17220e; background: #b8f36b; }
 .layer-order .layer-number { width: 25px; height: 25px; }
+.layer-subtabs { display: flex; gap: 5px; margin: 0 0 12px; padding: 3px; border: 1px solid #303a35; border-radius: 6px; background: #11171a; }
+.layer-subtabs button { flex: 1; padding: 7px 5px; font-size: 10px; color: #91a092; border-radius: 4px; white-space: nowrap; }
+.layer-subtabs button[aria-selected=true] { color: #c6dfa8; background: #b8f36b14; }
+.bitmap-layer-summary { width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid #344337; border-radius: 6px; margin-bottom: 9px; background: #14201866; text-align: left; }
+.bitmap-layer-summary > svg { color: #91ae76; }
+.bitmap-layer-summary > span:last-child { flex: 1; min-width: 0; }
+.bitmap-layer-summary strong { font-size: 10px; font-weight: 400; display: block; }
+.bitmap-layer-summary small { display: block; font-size: 8px; color: #829280; margin-top: 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .field-note { font-size: 9px; margin-top: 9px; }
 .text-inputs { gap: 10px; }
 .text-grid input { margin-top: 6px; padding: 8px; font-size: 10px; }
