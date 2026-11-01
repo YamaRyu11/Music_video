@@ -40,8 +40,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Check types
         run: npm run typecheck
-      - name: Check audio analysis and IPC validation
-        run: npx vitest run tests/analysis.test.ts tests/validation.test.ts
+      - name: Check analysis, terrain and IPC validation
+        run: npx vitest run tests/analysis.test.ts tests/terrain-track.test.ts tests/validation.test.ts
       - name: Build portable application
         run: npm run dist:win
       - name: Attach downloadable portable folder

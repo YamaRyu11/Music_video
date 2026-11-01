@@ -3,7 +3,10 @@ import { fontFamilies, type Analysis, type VisualSettings, type StyleId, type Te
 import { TAU, noise, alpha } from './math';
 import { spatialRenderers } from './spatial-styles';
 import { organicRenderers } from './organic-styles';
-import type { StyleRenderer } from './types';
+import type { StyleRenderer, StyleRenderContext } from './types';
+import { getTerrainTrack } from './terrain-track';
+import { terrain } from './wire-terrain';
+import { wireObjectRenderers } from './wire-objects';
 
 function ambient(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, f: Features, s: VisualSettings) {
   const color = s.color;
@@ -162,9 +165,9 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 };
 
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
-  ...spatialRenderers, ...organicRenderers, typography };
-function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings) {
-  ctx.save(); styleRenderers[style](ctx, w, h, t, f, s); ctx.restore();
+  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers };
+function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
+  ctx.save(); styleRenderers[style](ctx, w, h, t, f, s, context); ctx.restore();
 }
 
 function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
@@ -214,15 +217,18 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   };
   // Composite the graphics before grading. Text keeps its independently chosen color.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
+  const wireframeStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city'];
+  const context = wireframeStyles.includes(settings.style) || wireframeStyles.includes(settings.overlay.style)
+    ? { track: getTerrainTrack(analysis) } : undefined;
   const { scene, layer } = surfaces(ctx, width, height);
   const sceneCtx = scene.getContext('2d', { alpha: false })!, layerCtx = layer.getContext('2d')!;
   sceneCtx.save(); sceneCtx.scale(width / w, height / h);
   ambient(sceneCtx, w, h, time, features, settings);
-  drawStyle(sceneCtx, settings.style, w, h, time, features, settings);
+  drawStyle(sceneCtx, settings.style, w, h, time, features, settings, context);
   if (settings.overlay.style !== 'none' && settings.overlay.opacity > 0) {
     layerCtx.clearRect(0, 0, width, height);
     layerCtx.save(); layerCtx.scale(width / w, height / h);
-    drawStyle(layerCtx, settings.overlay.style, w, h, time, features, { ...settings, color: settings.overlay.color });
+    drawStyle(layerCtx, settings.overlay.style, w, h, time, features, { ...settings, color: settings.overlay.color }, context);
     layerCtx.restore();
     sceneCtx.globalCompositeOperation = settings.overlay.blend;
     sceneCtx.globalAlpha = settings.overlay.opacity;
