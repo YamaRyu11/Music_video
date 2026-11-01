@@ -1,8 +1,8 @@
-Music Video Studio v0.4.0 — Windows x64 ポータブル版
+Music Video Studio v0.5.0 — Windows x64 ポータブル版
 
 1. ZIP全体を、書き込み可能なフォルダに展開してください。
 2. 「Music Video Studio.exe」を起動してください。
-3. WAV / MP3をドロップし、全16種類からスタイル・縦横・色・反応を選びます。
+3. WAV / MP3をドロップし、全20種類からスタイル・縦横・色・反応を選びます。
    カテゴリと検索でスタイルを絞り込めます。
 4. 左のスタイルを合成の01（ベース）・02（重ねる映像）へドラッグして設定します。
    ドラッグを始めると合成タブが開きます。各枠のメニューでも選択できます。
@@ -19,9 +19,11 @@ EXEだけを移動せず、resourcesなど同梱ファイルと一緒に保管�
 縦動画では設定を右に配置し、プレビューは比率を保って縮小します。
 小さい画面では、設定パネル内だけスクロールする場合があります。
 
-追加スタイル: Laser Grid / Radial Bloom / Star Drive / Liquid Ink /
-Prism Kaleidoscope / Contour Landscape / Glitch Blocks / Lissajous /
-Light Rain / Reactive Typography
+新しい「ワイヤーフレーム」カテゴリ:
+Wireframe Journey / Warp Tunnel / Resonant Orb / Wireframe Metropolis
+Wireframe Journeyは曲ごとに地形が変わる擬似3Dの旅です。
+左の山は低音寄り、右の山は中高音寄りの特徴で高低が変化します。
+「音への反応」で山の変化量、メイン・サブカラーで左右の色を調整できます。
 Reactive Typographyの文字は「テキスト」でサイズや位置を調整できます。
 
 出力: MP4 / H.264 / AAC / 30fps

@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { styles, styleCategories } from '../../src/visuals/catalog';
+const librarySize = styles.length;
 
 const additions = [
   { id: 'laser', title: 'Laser Grid' },
@@ -27,13 +29,13 @@ async function expectWindowFits(page: Page) {
   await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
 }
 
-test('all sixteen styles remain searchable and filterable in the compact library', async ({ page }) => {
+test('all registered styles remain searchable and filterable in the compact library', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 640 });
   await page.goto('/');
   const cards = page.locator('.sidebar .style-card');
   const search = page.getByPlaceholder('スタイルを検索');
   const category = page.getByRole('combobox', { name: 'スタイルカテゴリ', exact: true });
-  await expect(cards).toHaveCount(16);
+  await expect(cards).toHaveCount(librarySize);
   for (const style of additions) {
     await search.fill(style.title);
     await expect(cards).toHaveCount(1);
@@ -43,20 +45,20 @@ test('all sixteen styles remain searchable and filterable in the compact library
   await search.fill('no-such-style-000');
   await expect(cards).toHaveCount(0);
   await search.clear();
-  await expect(cards).toHaveCount(16);
+  await expect(cards).toHaveCount(librarySize);
 
   const categorized = new Set<string>();
-  for (const value of ['minimal', 'glow', 'geometry', 'organic', 'space', 'typography']) {
+  for (const value of styleCategories.filter(c => c.id !== 'all').map(c => c.id)) {
     await category.selectOption(value);
     const count = await cards.count();
     expect(count, `${value} should filter the library`).toBeGreaterThan(0);
-    expect(count).toBeLessThan(16);
+    expect(count).toBeLessThan(librarySize);
     for (const name of await cards.evaluateAll(elements => elements.map(e => e.getAttribute('aria-label')!))) categorized.add(name);
     await expectWindowFits(page);
   }
-  expect(categorized.size).toBe(16);
+  expect(categorized.size).toBe(librarySize);
   await category.selectOption('all');
-  await expect(cards).toHaveCount(16);
+  await expect(cards).toHaveCount(librarySize);
 });
 
 test('each additional style renders a distinct repeatable preview in both orientations', async ({ page }) => {
@@ -87,7 +89,7 @@ test('each additional style renders a distinct repeatable preview in both orient
   expect(errors).toEqual([]);
 });
 
-test('the last library entry can be dragged into either layer and every new style is offered for both layers', async ({ page }) => {
+test('the typography library entry can be dragged into either layer and every new style is offered for both layers', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 900, height: 640 });
   await page.goto('/');

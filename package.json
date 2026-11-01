@@ -1,6 +1,6 @@
 {
   "name": "music-video-studio",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "音楽から映像をつくる、ポータブルなオーディオリアクティブ動画メーカー",
   "author": "Music Video Studio contributors",
@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "test:desktop": "npm run build && node scripts/test-desktop.mjs",
     "test:new-styles": "npm run build && node scripts/test-new-styles.mjs",
+    "test:wireframes": "npm run build && node scripts/test-new-styles.mjs --wireframes",
     "dist:win": "npm run build && node scripts/prepare-windows.mjs && electron-builder --win zip --x64 --publish never"
   },
   "dependencies": {

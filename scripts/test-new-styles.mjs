@@ -6,9 +6,11 @@ import os from 'node:os';
 import assert from 'node:assert/strict';
 
 // Exercise every added style through the actual UI, IPC, render window and encoder.
-const newStyles = ['laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography'];
-const temporary = await mkdtemp(path.join(os.tmpdir(), 'musicvideo-new-styles-'));
-const diagnostics = path.resolve('.cache/new-style-export-tests');
+const wireframes = process.argv.includes('--wireframes');
+const newStyles = wireframes ? ['terrain', 'wire-tube', 'wire-orb', 'wire-city']
+  : ['laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography'];
+const temporary = await mkdtemp(path.join(os.tmpdir(), wireframes ? 'musicvideo-wireframes-' : 'musicvideo-new-styles-'));
+const diagnostics = path.resolve(wireframes ? '.cache/wireframe-export-tests' : '.cache/new-style-export-tests');
 const platform = process.platform === 'win32' ? 'win32-x64/ffmpeg.exe' : 'linux-x64/ffmpeg';
 const ffmpeg = path.resolve(`node_modules/@ffmpeg-installer/${platform}`);
 const ffprobe = process.env.FFPROBE_PATH || 'ffprobe';
@@ -41,7 +43,7 @@ try {
   await page.getByRole('button', { name: 'Ocean', exact: true }).click();
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
   await page.getByPlaceholder('曲名を入力（任意）').fill('NEW STYLE TEST');
-  await page.getByPlaceholder('アーティスト名を入力（任意）').fill('全16スタイル・合成検証');
+  await page.getByPlaceholder('アーティスト名を入力（任意）').fill(wireframes ? 'ワイヤーフレーム・合成検証' : '新10スタイル・合成検証');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('70');
   await page.getByLabel('文字色', { exact: true }).fill('#ff245f');
   await page.getByRole('button', { name: '太字', exact: true }).click();
@@ -98,14 +100,14 @@ try {
       duration: Number(probe.format.duration), elapsedMs: Date.now() - begun, decodedBytes: png.length });
     console.log(`PASS: ${style} + ${overlay} (${aspect}) ${width}x${height}, H.264/AAC, 30 frames / 1 second; last frame decoded`);
   }
-  assert.equal(metrics.length, 10);
+  assert.equal(metrics.length, newStyles.length);
   assert.deepEqual(pageErrors, []);
   success = true;
-  console.log('PASS: all 10 added styles exported with another added style as overlay.');
+  console.log(`PASS: all ${newStyles.length} ${wireframes ? 'wireframe' : 'added'} styles exported with another tested style as overlay.`);
 } finally {
   try { if (app) await app.close(); }
   finally {
     await rm(temporary, { recursive: true, force: true });
-    await writeFile(path.join(diagnostics, 'metrics.json'), JSON.stringify({ startedAt, success, pageErrors, exports: metrics }, null, 2) + '\n');
+    await writeFile(path.join(diagnostics, 'metrics.json'), JSON.stringify({ startedAt, mode: wireframes ? 'wireframes' : 'new-styles', success, pageErrors, exports: metrics }, null, 2) + '\n');
   }
 }

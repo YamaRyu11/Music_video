@@ -10,6 +10,10 @@ function NewStyleArt({ kind }: { kind: string }) {
     {kind === 'art-lissajous' && <polyline points={Array.from({ length: 160 }, (_, i) => `${32 + Math.sin(i / 159 * Math.PI * 6 + .5) * 24},${24 + Math.sin(i / 159 * Math.PI * 4) * 17}`).join(' ')} opacity=".8" />}
     {kind === 'art-rain' && <>{Array.from({ length: 10 }, (_, i) => <path key={i} d={`M${6 + i * 5.8} ${4 + i * 11 % 26}v${5 + i % 3 * 2}`} opacity=".6" />)}<ellipse cx="32" cy="38" rx="18" ry="5" opacity=".5" /></>}
     {kind === 'art-typography' && <text x="32" y="33" textAnchor="middle" stroke="none" fill="#b8f36b" fontFamily="Georgia, serif" fontWeight="bold" fontSize="30">Aa</text>}
+    {kind === 'art-terrain' && <>{[0, 1, 2, 3, 4].map(i => <path key={i} d={`M0 ${22 + i * 5}L9 ${7 + i * 5}L20 ${20 + i * 4}L29 ${37 + i * 2}L36 ${37 + i * 2}L47 ${15 + i * 5}L57 ${8 + i * 5}L64 ${23 + i * 5}`} opacity={.8 - i * .1} />)}{[7, 20, 32, 47, 57].map(x => <path key={x} d={`M${x} 16L${32 + (x - 32) * 1.7} 48`} opacity=".35" />)}</>}
+    {kind === 'art-wire-tube' && <>{[0, 1, 2, 3].map(i => <ellipse key={i} cx="32" cy="24" rx={5 + i * 7} ry={4 + i * 5} transform={`rotate(${i * 12} 32 24)`} opacity={.9 - i * .15} />)}{Array.from({ length: 8 }, (_, i) => <path key={i} d={`M${32 + Math.cos(i * Math.PI / 4) * 5} ${24 + Math.sin(i * Math.PI / 4) * 4}L${32 + Math.cos(i * Math.PI / 4 + .3) * 31} ${24 + Math.sin(i * Math.PI / 4 + .3) * 24}`} opacity=".4" />)}</>}
+    {kind === 'art-wire-orb' && <><ellipse cx="32" cy="24" rx="22" ry="20" />{[8, 15].map(r => <ellipse key={r} cx="32" cy="24" rx={r} ry="20" opacity=".6" />)}{[13, 24, 35].map(y => <ellipse key={y} cx="32" cy={y} rx={y === 24 ? 22 : 18} ry="4" opacity=".6" />)}</>}
+    {kind === 'art-wire-city' && <>{[3, 16, 42, 54].map((x, i) => <g key={x} opacity=".75"><path d={`M${x} 43V${13 + i % 2 * 8}l7 -5V38Z`} /><path d={`M${x + 7} ${8 + i % 2 * 8}l5 5V43l-5 -5M${x} ${13 + i % 2 * 8}l5 4 7 -4M${x + 5} ${17 + i % 2 * 8}V48`} /></g>)}<path d="M30 22L23 48M35 22L42 48" opacity=".4" /></>}
   </svg>;
 }
 
