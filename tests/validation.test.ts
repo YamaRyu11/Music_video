@@ -45,4 +45,22 @@ describe('export IPC boundary', () => {
     ];
     for (const mutate of cases) { const value = spec(); mutate(value); expect(() => validateExport(value)).toThrow(); }
   });
+  it('accepts 1000% response, 200% smoothing and a transformed bitmap', () => {
+    const value = spec(); value.settings.intensity = 10; value.settings.smoothing = 2;
+    value.bitmapId = 'imported-local-image';
+    value.settings.bitmap = { enabled: true, fit: 'contain', scale: 5, x: -1, y: 1, rotation: 180,
+      crop: { left: .5, right: .45, top: .2, bottom: .3 }, opacity: .4, blur: 80, saturation: 0, brightness: 2 };
+    expect(() => validateExport(value)).not.toThrow();
+  });
+  it('rejects invalid bitmap geometry, filters and expanded range overflow', () => {
+    const cases: ((value: ExportSpec) => void)[] = [
+      v => { v.settings.intensity = 10.01; }, v => { v.settings.smoothing = 2.01; },
+      v => { v.settings.bitmap.crop.left = .6; v.settings.bitmap.crop.right = .4; },
+      v => { v.settings.bitmap.crop.top = -.01; }, v => { v.settings.bitmap.blur = 81; },
+      v => { v.settings.bitmap.scale = 0; }, v => { v.settings.bitmap.brightness = NaN; },
+      v => { v.settings.bitmap.fit = 'external-url' as never; }, v => { v.settings.bitmap.opacity = 2; },
+      v => { v.bitmapId = {} as never; },
+    ];
+    for (const mutate of cases) { const value = spec(); mutate(value); expect(() => validateExport(value)).toThrow(); }
+  });
 });

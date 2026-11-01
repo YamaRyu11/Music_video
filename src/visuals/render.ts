@@ -7,10 +7,12 @@ import type { StyleRenderer, StyleRenderContext } from './types';
 import { getTerrainTrack } from './terrain-track';
 import { terrain } from './wire-terrain';
 import { wireObjectRenderers } from './wire-objects';
+import { generativeRenderers } from './generative-styles';
+import { drawBitmap, type DecodedBitmap } from './bitmap';
 
-function ambient(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, f: Features, s: VisualSettings) {
+function ambient(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, f: Features, s: VisualSettings, transparent = false) {
   const color = s.color;
-  ctx.fillStyle = s.backgroundColor; ctx.fillRect(0, 0, width, height);
+  if (!transparent) { ctx.fillStyle = s.backgroundColor; ctx.fillRect(0, 0, width, height); }
   const glow = ctx.createRadialGradient(width * 0.5, height * 0.48, 0, width * 0.5, height * 0.48, Math.max(width, height) * 0.65);
   glow.addColorStop(0, alpha(color, (0.09 + f.bass * 0.08) * s.glow * 2)); glow.addColorStop(0.6, alpha(s.secondaryColor, s.glow * 0.035)); glow.addColorStop(1, alpha(color, 0));
   ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
@@ -165,7 +167,7 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 };
 
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
-  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers };
+  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
   ctx.save(); styleRenderers[style](ctx, w, h, t, f, s, context); ctx.restore();
 }
@@ -210,20 +212,22 @@ function surfaces(ctx: CanvasRenderingContext2D, width: number, height: number) 
 
 /** Stateless seeded drawing: any frame is reproducible during seeking/export. */
 export function renderScene(ctx: CanvasRenderingContext2D, width: number, height: number, time: number,
-  settings: VisualSettings, analysis?: Analysis) {
+  settings: VisualSettings, analysis?: Analysis, bitmap?: DecodedBitmap) {
   const features = analysis ? sampleFeatures(analysis, time, settings.smoothing) : {
     level: 0.35, bass: 0.3, treble: 0.2, attack: 0,
     bands: Array.from({ length: 48 }, (_, i) => 0.15 + Math.sin(i * 0.4) ** 2 * 0.22),
   };
   // Composite the graphics before grading. Text keeps its independently chosen color.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
-  const wireframeStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city'];
-  const context = wireframeStyles.includes(settings.style) || wireframeStyles.includes(settings.overlay.style)
+  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix'];
+  const context = trackDrivenStyles.includes(settings.style) || trackDrivenStyles.includes(settings.overlay.style)
     ? { track: getTerrainTrack(analysis) } : undefined;
   const { scene, layer } = surfaces(ctx, width, height);
-  const sceneCtx = scene.getContext('2d', { alpha: false })!, layerCtx = layer.getContext('2d')!;
+  const sceneCtx = scene.getContext('2d')!, layerCtx = layer.getContext('2d')!;
+  sceneCtx.clearRect(0, 0, width, height);
   sceneCtx.save(); sceneCtx.scale(width / w, height / h);
-  ambient(sceneCtx, w, h, time, features, settings);
+  const showBitmap = !!bitmap && settings.bitmap.enabled && settings.bitmap.opacity > 0;
+  ambient(sceneCtx, w, h, time, features, settings, showBitmap);
   drawStyle(sceneCtx, settings.style, w, h, time, features, settings, context);
   if (settings.overlay.style !== 'none' && settings.overlay.opacity > 0) {
     layerCtx.clearRect(0, 0, width, height);
@@ -235,8 +239,11 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
     sceneCtx.drawImage(layer, 0, 0, w, h);
   }
   sceneCtx.restore();
-  ctx.save(); ctx.fillStyle = settings.backgroundColor; ctx.fillRect(0, 0, width, height);
-  ctx.filter = `saturate(${settings.saturation}) brightness(${settings.brightness})`;
+  const grade = `saturate(${settings.saturation}) brightness(${settings.brightness})`;
+  ctx.save(); ctx.filter = grade;
+  ctx.fillStyle = settings.backgroundColor; ctx.fillRect(0, 0, width, height); ctx.filter = 'none';
+  if (bitmap) drawBitmap(ctx, width, height, bitmap, settings.bitmap);
+  ctx.filter = grade;
   ctx.drawImage(scene, 0, 0); ctx.filter = 'none';
   ctx.scale(width / w, height / h);
   const motion = { time, features, intensity: settings.intensity, glow: settings.glow };

@@ -2,14 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowRight, AudioLines, Check, CheckCircle2, CircleHelp,
   FileAudio, FolderOpen, HardDrive, Headphones, LoaderCircle, Maximize2, Monitor, Pause, Play,
   Search, Smartphone, Upload, Volume2, X } from 'lucide-react';
-import { defaultSettings, dimensions, formatTime, MAX_DURATION, MAX_FILE_BYTES, type Analysis, type AudioAsset,
-  type ExportProgress, type VisualSettings } from './shared';
+import { defaultSettings, defaultBitmapSettings, dimensions, formatTime, MAX_DURATION, MAX_FILE_BYTES, MAX_BITMAP_BYTES,
+  type Analysis, type AudioAsset, type BitmapAsset, type ExportProgress, type VisualSettings } from './shared';
 import { renderScene } from './visuals/render';
 import { styles, styleCategories, type StyleCategory } from './visuals/catalog';
 import { Customizer } from './components/Customizer';
 import { version } from '../package.json';
 import { STYLE_DRAG_TYPE } from './visuals/style-drag';
 import { StyleArt } from './components/StyleArt';
+import { RangeInput } from './components/Slider';
+import { decodeBitmap, type DecodedBitmap } from './visuals/bitmap';
 
 function Waveform({ peaks, progress }: { peaks?: number[]; progress: number }) {
   return <div className="waveform" aria-hidden="true">{Array.from({ length: 90 }, (_, i) => {
@@ -22,6 +24,8 @@ export function App() {
   const [settings, setSettings] = useState<VisualSettings>(defaultSettings);
   const [analysis, setAnalysis] = useState<Analysis>();
   const [asset, setAsset] = useState<{ id?: string; name: string; url: string }>();
+  const [bitmap, setBitmap] = useState<{ id?: string; name: string; source: DecodedBitmap }>();
+  const [bitmapBusy, setBitmapBusy] = useState(false);
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [playing, setPlaying] = useState(false);
@@ -34,10 +38,11 @@ export function App() {
   const [exportStatus, setExportStatus] = useState<ExportProgress>();
   const [help, setHelp] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null), preview = useRef<HTMLDivElement>(null);
-  const audio = useRef<HTMLAudioElement>(null), input = useRef<HTMLInputElement>(null);
+  const audio = useRef<HTMLAudioElement>(null), input = useRef<HTMLInputElement>(null), bitmapInput = useRef<HTMLInputElement>(null);
   const analyzer = useRef<Worker | null>(null), generation = useRef(0);
   const currentAsset = useRef(asset); currentAsset.current = asset;
   const busyRef = useRef(false);
+  const bitmapBusyRef = useRef(false), choosingBitmap = useRef(false);
   const update = <K extends keyof VisualSettings>(key: K, value: VisualSettings[K]) => setSettings(s => ({ ...s, [key]: value }));
 
   const loadAudio = useCallback(async (file: File, desktopAsset?: AudioAsset) => {
@@ -79,6 +84,36 @@ export function App() {
   async function importDesktop(value: AudioAsset | null) {
     if (value) await loadAudio(new File([Uint8Array.from(value.bytes)], value.name), value);
   }
+  const loadBitmap = useCallback(async (file: File, desktopAsset?: BitmapAsset) => {
+    if (bitmapBusyRef.current) { if (desktopAsset) void window.studio?.releaseBitmap(desktopAsset.id); return; }
+    if (!/\.(png|jpe?g|webp|bmp)$/i.test(file.name) || file.size > MAX_BITMAP_BYTES || !file.size) {
+      setError('背景画像は25 MB以下のPNG / JPEG / WebP / BMPを選んでください。');
+      if (desktopAsset) void window.studio?.releaseBitmap(desktopAsset.id);
+      return;
+    }
+    bitmapBusyRef.current = true; setBitmapBusy(true); setError('');
+    try {
+      const ext = file.name.split('.').at(-1)?.toLowerCase();
+      const mime = desktopAsset?.mime || file.type || (ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`);
+      const source = await decodeBitmap(new Uint8Array(await file.arrayBuffer()), mime);
+      setSettings(s => ({ ...s, bitmap: structuredClone(defaultBitmapSettings) }));
+      setBitmap({ id: desktopAsset?.id, name: file.name, source }); setExportStatus(undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '背景画像を読み込めませんでした。');
+      if (desktopAsset) void window.studio?.releaseBitmap(desktopAsset.id);
+    } finally { bitmapBusyRef.current = false; setBitmapBusy(false); }
+  }, []);
+  async function importDesktopBitmap(value: BitmapAsset | null) {
+    if (value) await loadBitmap(new File([Uint8Array.from(value.bytes)], value.name, { type: value.mime }), value);
+  }
+  async function chooseBitmap() {
+    if (bitmapBusyRef.current || choosingBitmap.current || exporting) return;
+    if (!window.studio) { bitmapInput.current?.click(); return; }
+    choosingBitmap.current = true;
+    try { await importDesktopBitmap(await window.studio.chooseBitmap()); }
+    catch (err) { setError(err instanceof Error ? err.message : String(err)); }
+    finally { choosingBitmap.current = false; }
+  }
   async function chooseAudio() {
     if (busyRef.current || exporting) return;
     if (window.studio) { try { await importDesktop(await window.studio.chooseAudio()); } catch (e) { setError(String(e)); } }
@@ -99,6 +134,9 @@ export function App() {
     });
   }, []);
   useEffect(() => () => { generation.current++; analyzer.current?.terminate(); if (currentAsset.current) URL.revokeObjectURL(currentAsset.current.url); }, []);
+  useEffect(() => () => {
+    bitmap?.source.image.close(); if (bitmap?.id) void window.studio?.releaseBitmap(bitmap.id);
+  }, [bitmap]);
 
   useEffect(() => {
     let frame = 0;
@@ -110,13 +148,13 @@ export function App() {
         const targetWidth = settings.aspect === 'portrait' ? 432 : 960;
         const targetHeight = Math.round(targetWidth * h / w);
         if (c.width !== targetWidth || c.height !== targetHeight) { c.width = targetWidth; c.height = targetHeight; }
-        if (ctx) renderScene(ctx, c.width, c.height, a && asset ? a.currentTime : 0, settings, analysis);
+        if (ctx) renderScene(ctx, c.width, c.height, a && asset ? a.currentTime : 0, settings, analysis, bitmap?.source);
       }
       frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [analysis, settings, asset]);
+  }, [analysis, settings, asset, bitmap]);
 
   async function togglePlay() {
     if (!audio.current || !asset) return;
@@ -131,7 +169,7 @@ export function App() {
     if (!window.studio || !asset?.id || !analysis || exporting) return;
     audio.current?.pause(); setError(''); setExporting(true); setExportStatus(undefined);
     try {
-      const started = await window.studio.startExport({ assetId: asset.id, analysis, settings });
+      const started = await window.studio.startExport({ assetId: asset.id, analysis, settings, bitmapId: bitmap?.id });
       if (!started) setExporting(false);
     } catch (err) { setExporting(false); setError(err instanceof Error ? err.message : String(err)); }
   }
@@ -139,7 +177,7 @@ export function App() {
   const selected = styles.find(s => s.id === settings.style)!;
   const visibleStyles = styles.filter(s => (category === 'all' || s.category === category)
     && `${s.title} ${s.subtitle}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
-  const locked = exporting || busy !== null;
+  const locked = exporting || busy !== null || bitmapBusy;
   const progress = exportStatus && 'progress' in exportStatus ? exportStatus.progress : 0;
 
   return <div className="app-shell" onDragOver={e => {
@@ -149,11 +187,17 @@ export function App() {
     onDrop={async e => {
       e.preventDefault(); setDrag(false); if (locked || !e.dataTransfer.types.includes('Files')) return;
       const file = e.dataTransfer.files[0]; if (!file) return;
-      try { if (window.studio) await importDesktop(await window.studio.importDrop(file)); else await loadAudio(file); }
+      try {
+        if (/\.(png|jpe?g|webp|bmp)$/i.test(file.name)) {
+          if (window.studio) await importDesktopBitmap(await window.studio.importBitmapDrop(file)); else await loadBitmap(file);
+        } else if (window.studio) await importDesktop(await window.studio.importDrop(file)); else await loadAudio(file);
+      }
       catch (err) { setError(err instanceof Error ? err.message : String(err)); }
     }}>
     <input className="sr-only" ref={input} type="file" accept=".wav,.mp3,audio/wav,audio/mpeg"
       onChange={e => { const file = e.target.files?.[0]; if (file) void loadAudio(file); e.target.value = ''; }} aria-label="音源ファイル" />
+    <input className="sr-only" ref={bitmapInput} type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,image/png,image/jpeg,image/webp,image/bmp"
+      disabled={locked} onChange={e => { const file = e.target.files?.[0]; if (file) void loadBitmap(file); e.target.value = ''; }} aria-label="背景画像ファイル" />
     <audio ref={audio} src={asset?.url} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
       onEnded={() => setPlaying(false)} onTimeUpdate={() => setTime(audio.current?.currentTime ?? 0)} />
     <header className="topbar">
@@ -214,13 +258,15 @@ export function App() {
         <div className="transport">
           <button className="play-button" onClick={togglePlay} disabled={!asset || locked} aria-label={playing ? '一時停止' : '再生'}>{playing ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}</button>
           <span className="time-current">{formatTime(time)}</span>
-          <div className="timeline"><Waveform peaks={analysis?.peaks} progress={duration ? time / duration : 0} /><input type="range" aria-label="再生位置" min="0" max={duration || 1} step="0.01" value={Math.min(time, duration)} disabled={!asset || locked} onChange={e => seek(Number(e.target.value))} /></div>
+          <div className="timeline"><Waveform peaks={analysis?.peaks} progress={duration ? time / duration : 0} /><RangeInput aria-label="再生位置" min={0} max={duration || 1} step={.01} value={Math.min(time, duration)} disabled={!asset || locked} onValueChange={seek} /></div>
           <span className="time-total">{formatTime(duration)}</span><Volume2 className="volume-icon" size={17} />
         </div>
         <div className="preview-footnote"><span><span className="status-dot" />プレビューと書き出しは同じ映像エンジン</span><span>FULL HD <span className="divider">/</span> 30 FPS</span></div>
         </section>
 
-        <Customizer settings={settings} onChange={setSettings} disabled={exporting} draggingStyle={draggingStyle} />
+        <Customizer settings={settings} onChange={setSettings} disabled={exporting} draggingStyle={draggingStyle}
+          bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
+          bitmapBusy={bitmapBusy} onChooseBitmap={chooseBitmap} onRemoveBitmap={() => setBitmap(undefined)} />
         </div>
 
         <div className="export-dock">
@@ -236,7 +282,7 @@ export function App() {
         <footer><span>CREATED BY YOU. POWERED BY SOUND.</span><span>Music Video Studio <span className="footer-version">v{version}</span></span></footer>
       </main>
     </div>
-    {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源をここにドロップ</h2><p>WAV / MP3</p></div></div>}
-    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>{styles.length}種類のスタイル・縦横・色・音への反応を調整。</li><li>左のスタイルを01 / 02へドラッグして映像を重ね、「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>初版は250 MB・10分までの音源、30fpsの出力に対応しています。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
+    {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源・背景画像をここにドロップ</h2><p>WAV / MP3 / PNG / JPEG / WebP / BMP</p></div></div>}
+    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>{styles.length}種類のスタイル・縦横・色・音への反応を調整。</li><li>「レイヤー合成」で00に背景画像を追加。左のスタイルを01 / 02へドラッグして映像を重ねます。</li><li>「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;
 }

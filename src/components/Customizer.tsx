@@ -1,9 +1,11 @@
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { Bold, Check, Italic, Layers2, Palette, RotateCcw, Settings2, Type } from 'lucide-react';
-import { defaultSettings, type TextDesign, type VisualSettings } from '../shared';
+import { Bold, Check, Image, Italic, Layers2, Palette, RotateCcw, Settings2, Type } from 'lucide-react';
+import { defaultSettings, MAX_INTENSITY, MAX_SMOOTHING, type TextDesign, type VisualSettings } from '../shared';
 import { styles } from '../visuals/catalog';
 import { droppedStyle, isStyleDrag } from '../visuals/style-drag';
 import type { StyleId } from '../shared';
+import { Slider } from './Slider';
+import { BitmapPanel } from './BitmapPanel';
 
 const colors = ['#b8f36b', '#67e8d0', '#79acff', '#c79cff', '#ff95b5', '#ffbe73'];
 const palettes = [
@@ -14,11 +16,6 @@ const palettes = [
 ];
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (color: string) => void }) {
   return <label className="color-field"><span>{label}</span><span className="color-field-value"><input type="color" aria-label={label} value={value} onChange={e => onChange(e.target.value)} /><code>{value.toUpperCase()}</code></span></label>;
-}
-function Slider({ label, value, min, max, step = .05, suffix = '%', scale = 100, onChange }: {
-  label: string; value: number; min: number; max: number; step?: number; suffix?: string; scale?: number; onChange: (value: number) => void;
-}) {
-  return <label className="design-slider"><span>{label}<output>{Math.round(value * scale)}{suffix}</output></span><input type="range" aria-label={label} min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} /></label>;
 }
 
 function LayerSlot({ slot, disabled, draggingStyle, onStyle, children }: {
@@ -40,12 +37,14 @@ function LayerSlot({ slot, disabled, draggingStyle, onStyle, children }: {
   </div>;
 }
 
-export function Customizer({ settings, onChange, disabled, draggingStyle = false }: {
+export function Customizer({ settings, onChange, disabled, draggingStyle = false, bitmapAsset, bitmapBusy, onChooseBitmap, onRemoveBitmap }: {
   settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>; disabled: boolean; draggingStyle?: boolean;
+  bitmapAsset?: { name: string; width: number; height: number }; bitmapBusy: boolean; onChooseBitmap: () => void; onRemoveBitmap: () => void;
 }) {
   const [tab, setTab] = useState<'color' | 'layers' | 'text'>('color');
+  const [layerPage, setLayerPage] = useState<'styles' | 'bitmap'>('styles');
   const [target, setTarget] = useState<'titleDesign' | 'artistDesign'>('titleDesign');
-  useEffect(() => { if (draggingStyle) setTab('layers'); }, [draggingStyle]);
+  useEffect(() => { if (draggingStyle) { setTab('layers'); setLayerPage('styles'); } }, [draggingStyle]);
   const update = <K extends keyof VisualSettings>(key: K, value: VisualSettings[K]) => onChange(s => ({ ...s, [key]: value }));
   const updateLayer = <K extends keyof VisualSettings['overlay']>(key: K, value: VisualSettings['overlay'][K]) => onChange(s => ({ ...s, overlay: { ...s.overlay, [key]: value } }));
   const updateText = <K extends keyof TextDesign>(key: K, value: TextDesign[K]) => onChange(s => ({ ...s, [target]: { ...s[target], [key]: value } }));
@@ -74,12 +73,20 @@ export function Customizer({ settings, onChange, disabled, draggingStyle = false
             <Slider label="光の広がり" value={settings.glow} min={0} max={1} onChange={v => update('glow', v)} />
           </div>
           <div className="design-grid separated">
-            <Slider label="音への反応" value={settings.intensity} min={0} max={2} onChange={v => update('intensity', v)} />
-            <Slider label="動きの滑らかさ" value={settings.smoothing} min={0} max={1} onChange={v => update('smoothing', v)} />
+            <Slider label="音への反応" value={settings.intensity} min={0} max={MAX_INTENSITY} onChange={v => update('intensity', v)} />
+            <Slider label="動きの滑らかさ" value={settings.smoothing} min={0} max={MAX_SMOOTHING} onChange={v => update('smoothing', v)} />
           </div>
+          <p className="field-note">Shiftを押しながらドラッグすると、細かく調整できます。</p>
         </>}
 
         {tab === 'layers' && <>
+          <div className="layer-subtabs" role="tablist" aria-label="レイヤーの種類">
+            <button role="tab" aria-selected={layerPage === 'styles'} onClick={() => setLayerPage('styles')}>スタイル合成</button>
+            <button role="tab" aria-selected={layerPage === 'bitmap'} onClick={() => setLayerPage('bitmap')}>背景ビットマップ</button>
+          </div>
+          {layerPage === 'bitmap' ? <BitmapPanel settings={settings.bitmap} onChange={value => update('bitmap', value)}
+            asset={bitmapAsset} busy={bitmapBusy} disabled={disabled} onChoose={onChooseBitmap} onRemove={onRemoveBitmap} /> : <>
+          <button className="bitmap-layer-summary" onClick={() => setLayerPage('bitmap')}><span className="layer-number">00</span><Image size={15} /><span><strong>背景ビットマップ</strong><small>{bitmapAsset?.name || '画像を追加して背景に配置'}</small></span></button>
           <LayerSlot slot="01" disabled={disabled} draggingStyle={draggingStyle} onStyle={style => update('style', style)}><label>ベース映像<select aria-label="ベースのスタイル" value={settings.style} onChange={e => update('style', e.target.value as StyleId)}>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></LayerSlot>
           <LayerSlot slot="02" disabled={disabled} draggingStyle={draggingStyle} onStyle={style => updateLayer('style', style)}><label>重ねるスタイル<select aria-label="重ねるスタイル" value={settings.overlay.style} onChange={e => updateLayer('style', e.target.value as VisualSettings['overlay']['style'])}><option value="none">なし（合成しない）</option>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></LayerSlot>
           <fieldset disabled={!layerEnabled} className="design-grid overlay-options">
@@ -87,6 +94,7 @@ export function Customizer({ settings, onChange, disabled, draggingStyle = false
             <label>合成方法<select aria-label="合成方法" value={settings.overlay.blend} onChange={e => updateLayer('blend', e.target.value as VisualSettings['overlay']['blend'])}><option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option></select></label>
             <div className="full-row"><Slider label="レイヤーの不透明度" value={settings.overlay.opacity} min={0} max={1} onChange={v => updateLayer('opacity', v)} /><p className="field-note">0%で非表示、100%ではっきり重なります。テキストは合成後に表示されます。</p></div>
           </fieldset>
+          </>}
         </>}
 
         {tab === 'text' && <>

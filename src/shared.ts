@@ -1,10 +1,32 @@
 export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'aurora',
   'laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography',
-  'terrain', 'wire-tube', 'wire-orb', 'wire-city'] as const;
+  'terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix'] as const;
 export type StyleId = typeof STYLE_IDS[number];
 export type Aspect = 'landscape' | 'portrait';
 export type FontId = 'sans' | 'serif' | 'mono' | 'meiryo';
 export type BlendMode = 'source-over' | 'screen' | 'lighter' | 'multiply';
+export const MAX_INTENSITY = 10;
+export const MAX_SMOOTHING = 2;
+export const MAX_BITMAP_BYTES = 25 * 1024 * 1024;
+export const MAX_BITMAP_PIXELS = 32_000_000;
+export interface BitmapSettings {
+  enabled: boolean;
+  fit: 'cover' | 'contain';
+  scale: number;
+  x: number;
+  y: number;
+  rotation: number;
+  crop: { left: number; right: number; top: number; bottom: number };
+  opacity: number;
+  blur: number;
+  saturation: number;
+  brightness: number;
+}
+export const defaultBitmapSettings: BitmapSettings = {
+  enabled: true, fit: 'cover', scale: 1, x: 0, y: 0, rotation: 0,
+  crop: { left: 0, right: 0, top: 0, bottom: 0 }, opacity: 1, blur: 0, saturation: 1, brightness: 1,
+};
+export interface BitmapAsset { id: string; name: string; bytes: Uint8Array; mime: string }
 export interface TextDesign {
   size: number;
   color: string;
@@ -39,6 +61,7 @@ export interface VisualSettings {
   artist: string;
   titleDesign: TextDesign;
   artistDesign: TextDesign;
+  bitmap: BitmapSettings;
 }
 
 const baseText: TextDesign = { size: 42, color: '#f1f5ee', font: 'sans', weight: 400,
@@ -50,6 +73,7 @@ export const defaultSettings: VisualSettings = {
   intensity: 1, smoothing: 0.5, title: '', artist: '',
   titleDesign: { ...baseText },
   artistDesign: { ...baseText, size: 22, color: '#8c9b99', y: 0.835 },
+  bitmap: { ...defaultBitmapSettings, crop: { ...defaultBitmapSettings.crop } },
 };
 export const ANALYSIS_FPS = 60;
 export const BAND_COUNT = 48;
@@ -70,7 +94,8 @@ export interface AudioAsset {
   name: string;
   bytes: Uint8Array;
 }
-export interface ExportSpec { assetId: string; analysis: Analysis; settings: VisualSettings }
+export interface ExportSpec { assetId: string; analysis: Analysis; settings: VisualSettings; bitmapId?: string }
+export interface RenderSpec extends ExportSpec { jobId: string; bitmapAsset?: BitmapAsset }
 export type ExportProgress =
   | { state: 'rendering'; progress: number }
   | { state: 'encoding'; progress: number }
@@ -83,11 +108,14 @@ export interface DesktopBridge {
   loadDemo(): Promise<AudioAsset>;
   importDrop(file: File): Promise<AudioAsset>;
   releaseAudio(id: string): Promise<void>;
+  chooseBitmap(): Promise<BitmapAsset | null>;
+  importBitmapDrop(file: File): Promise<BitmapAsset>;
+  releaseBitmap(id: string): Promise<void>;
   startExport(spec: ExportSpec): Promise<boolean>;
   cancelExport(): Promise<void>;
   onExportProgress(fn: (event: ExportProgress) => void): () => void;
   revealOutput(): Promise<void>;
-  onRenderStart(fn: (spec: ExportSpec & { jobId: string }) => void): () => void;
+  onRenderStart(fn: (spec: RenderSpec) => void): () => void;
   renderReady(): void;
   writeFrame(jobId: string, index: number, bytes: ArrayBuffer): Promise<boolean>;
   finishRender(jobId: string): Promise<void>;

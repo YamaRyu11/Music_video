@@ -1,4 +1,4 @@
-import { ANALYSIS_FPS, BAND_COUNT, FEATURE_STRIDE, type Analysis } from '../shared';
+import { ANALYSIS_FPS, BAND_COUNT, FEATURE_STRIDE, MAX_SMOOTHING, type Analysis } from '../shared';
 
 const FFT_SIZE = 2048;
 const clamp = (x: number) => Math.max(0, Math.min(1, x));
@@ -114,7 +114,7 @@ export function sampleFeatures(analysis: Analysis, seconds: number, smoothing: n
   const position = Math.max(0, Math.min(count - 1, seconds * analysis.fps));
   const index = Math.floor(position), frac = position - index;
   const values = new Float64Array(FEATURE_STRIDE);
-  const history = Math.round(2 + smoothing * 18);
+  const history = Math.round(2 + Math.max(0, Math.min(MAX_SMOOTHING, smoothing)) * 18);
   let total = 0;
   for (let back = 0; back <= history; back++) {
     const weight = Math.exp(-back / Math.max(1, history / 3)); total += weight;
