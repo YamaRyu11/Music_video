@@ -60,7 +60,7 @@ test('all wireframe styles work in both composition slots and support drag assig
   await page.setViewportSize({ width: 900, height: 640 });
   await page.goto('/');
   await page.getByRole('combobox', { name: 'スタイルカテゴリ', exact: true }).selectOption('wireframe');
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   const base = page.getByRole('combobox', { name: 'ベースのスタイル', exact: true });
   const overlay = page.getByRole('combobox', { name: '重ねるスタイル', exact: true });
   for (let i = 0; i < wireStyles.length; i++) {

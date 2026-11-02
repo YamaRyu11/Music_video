@@ -6,7 +6,8 @@ import { defaultSettings, defaultBitmapSettings, dimensions, formatTime, MAX_DUR
   type Analysis, type AudioAsset, type BitmapAsset, type ExportProgress, type LayerTarget, type VisualSettings } from './shared';
 import { renderScene } from './visuals/render';
 import { styles, styleCategories, type StyleCategory } from './visuals/catalog';
-import { Customizer } from './components/Customizer';
+import { Customizer, type CustomizerTab } from './components/Customizer';
+import { LayerToolbar } from './components/LayerToolbar';
 import { version } from '../package.json';
 import { STYLE_DRAG_TYPE } from './visuals/style-drag';
 import { StyleArt } from './components/StyleArt';
@@ -23,6 +24,7 @@ function Waveform({ peaks, progress }: { peaks?: number[]; progress: number }) {
 export function App() {
   const [settings, setSettings] = useState<VisualSettings>(defaultSettings);
   const [selectedLayer, setSelectedLayer] = useState<LayerTarget>('base');
+  const [activeTab, setActiveTab] = useState<CustomizerTab>('color');
   const [analysis, setAnalysis] = useState<Analysis>();
   const [asset, setAsset] = useState<{ id?: string; name: string; url: string }>();
   const [bitmap, setBitmap] = useState<{ id?: string; name: string; source: DecodedBitmap }>();
@@ -203,8 +205,13 @@ export function App() {
     <audio ref={audio} src={asset?.url} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
       onEnded={() => setPlaying(false)} onTimeUpdate={() => setTime(audio.current?.currentTime ?? 0)} />
     <header className="topbar">
-      <a className="brand" href="#" aria-label="Music Video Studio"><span className="brand-symbol"><AudioLines size={22} /></span><span>Music Video <b>Studio</b></span><span className="version">BETA</span></a>
-      <div className="top-actions"><span className="local-label"><span />すべての処理を、このPCで。</span><button className="icon-button help-button" onClick={() => setHelp(!help)} aria-label="使い方"><CircleHelp size={19} /></button></div>
+      <div className="brand-row"><a className="brand" href="#" aria-label="Music Video Studio"><span className="brand-symbol"><AudioLines size={22} /></span><span>Music Video <b>Studio</b></span><span className="version">BETA</span></a>
+        <div className="top-actions"><div className="aspect-switch" aria-label="動画の向き"><button disabled={exporting} aria-pressed={settings.aspect === 'landscape'} className={settings.aspect === 'landscape' ? 'active' : ''} onClick={() => update('aspect', 'landscape')}><Monitor size={14} />横 16:9</button><button disabled={exporting} aria-pressed={settings.aspect === 'portrait'} className={settings.aspect === 'portrait' ? 'active' : ''} onClick={() => update('aspect', 'portrait')}><Smartphone size={14} />縦 9:16</button></div><button className="icon-button help-button" onClick={() => setHelp(!help)} aria-label="使い方"><CircleHelp size={18} /></button></div>
+      </div>
+      <LayerToolbar settings={settings} onChange={setSettings} selectedLayer={selectedLayer} onSelectLayer={setSelectedLayer}
+        disabled={exporting} draggingStyle={draggingStyle} bitmapBusy={bitmapBusy}
+        bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
+        onChooseBitmap={chooseBitmap} onEditBitmap={() => setActiveTab('bitmap')} onRemoveBitmap={() => setBitmap(undefined)} />
     </header>
     <div className="workspace">
       <aside className="sidebar">
@@ -246,16 +253,12 @@ export function App() {
       </aside>
 
       <main className={`main-content ${settings.aspect}`}>
-        <div className="workspace-title"><div><span className="eyebrow">MAKE YOUR SOUND VISIBLE</span><h2>プレビュー<span className="preview-badge">LIVE PREVIEW</span></h2></div>
-          <div className="aspect-switch" aria-label="動画の向き"><button disabled={exporting} aria-pressed={settings.aspect === 'landscape'} className={settings.aspect === 'landscape' ? 'active' : ''} onClick={() => update('aspect', 'landscape')}><Monitor size={15} />横 16:9</button><button disabled={exporting} aria-pressed={settings.aspect === 'portrait'} className={settings.aspect === 'portrait' ? 'active' : ''} onClick={() => update('aspect', 'portrait')}><Smartphone size={15} />縦 9:16</button></div>
-        </div>
         {(error || exportStatus?.state === 'error') && <div className="error-message" role="alert"><span>{error || (exportStatus?.state === 'error' ? exportStatus.message : '')}</span><button aria-label="エラーを閉じる" onClick={() => { setError(''); setExportStatus(undefined); }}><X size={16} /></button></div>}
         <div className="editor-grid">
         <section className="preview-column" aria-label="映像プレビューと再生">
         <div className={`preview-stage ${settings.aspect}`} ref={preview}>
           <canvas ref={canvas} aria-label={`${selected.title} の映像プレビュー`} />
           <div className="preview-top"><span><span className="status-dot" />{selected.title}</span><span>{settings.aspect === 'portrait' ? '1080 × 1920' : '1920 × 1080'}</span></div>
-          {!asset && <div className="empty-caption">音源を追加すると、音に合わせて動き出します</div>}
           <button className="fullscreen icon-button" title="プレビューを全画面表示" aria-label="プレビューを全画面表示" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void preview.current?.requestFullscreen(); }}><Maximize2 size={17} /></button>
         </div>
         <div className="transport">
@@ -264,10 +267,9 @@ export function App() {
           <div className="timeline"><Waveform peaks={analysis?.peaks} progress={duration ? time / duration : 0} /><RangeInput aria-label="再生位置" min={0} max={duration || 1} step={.01} value={Math.min(time, duration)} disabled={!asset || locked} onValueChange={seek} /></div>
           <span className="time-total">{formatTime(duration)}</span><Volume2 className="volume-icon" size={17} />
         </div>
-        <div className="preview-footnote"><span><span className="status-dot" />プレビューと書き出しは同じ映像エンジン</span><span>FULL HD <span className="divider">/</span> 30 FPS</span></div>
         </section>
 
-        <Customizer settings={settings} onChange={setSettings} selectedLayer={selectedLayer} onSelectLayer={setSelectedLayer} disabled={exporting} draggingStyle={draggingStyle}
+        <Customizer settings={settings} onChange={setSettings} selectedLayer={selectedLayer} activeTab={activeTab} onTabChange={setActiveTab} disabled={exporting}
           bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
           bitmapBusy={bitmapBusy} onChooseBitmap={chooseBitmap} onRemoveBitmap={() => setBitmap(undefined)} />
         </div>
@@ -286,6 +288,14 @@ export function App() {
       </main>
     </div>
     {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源・背景画像をここにドロップ</h2><p>WAV / MP3 / PNG / JPEG / WebP / BMP</p></div></div>}
-    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>{styles.length}種類のスタイル・縦横・色・音への反応を調整。</li><li>「レイヤー合成」で00に背景画像を追加。左のスタイルを01 / 02へドラッグして映像を重ねます。</li><li>01 / 02の編集ボタンで対象を選び、「カラー・動き」で色や線の太さを調整。左のスタイルも選択中のレイヤーに適用されます。</li><li>「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
+    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}>
+      <button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2>
+      <ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li>
+        <li>ヘッダーの01 / 02で編集するレイヤーを選択。左の{styles.length}種類のスタイルを選ぶか、01 / 02へドラッグします。</li>
+        <li>各レイヤーのメイン・サブカラーや02の合成方法・不透明度はヘッダーで、「カラー・動き」では反応や線の太さも調整できます。</li>
+        <li>00に背景画像を追加。「背景ビットマップ」で配置・トリミング・エフェクトを調整します。</li>
+        <li>「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol>
+      <p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p>
+      <button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;
 }

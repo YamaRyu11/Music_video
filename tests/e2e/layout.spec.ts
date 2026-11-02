@@ -38,7 +38,7 @@ for (const viewport of [{ width: 900, height: 640 }, { width: 900, height: 740 }
         expect(settings!.x).toBeGreaterThanOrEqual(preview!.x + preview!.width - 1);
       }
 
-      for (const name of ['カラー・動き', 'レイヤー合成', 'テキスト']) {
+      for (const name of ['カラー・動き', '背景ビットマップ', 'テキスト']) {
         await page.getByRole('tab', { name, exact: true }).click();
         await expectDocumentFits(page);
         await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
@@ -51,7 +51,7 @@ for (const viewport of [{ width: 900, height: 640 }, { width: 900, height: 740 }
 test('style cards can be dropped independently into both composition slots', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
-  await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   const base = page.getByRole('combobox', { name: 'ベースのスタイル', exact: true });
   const overlay = page.getByRole('combobox', { name: '重ねるスタイル', exact: true });
 
@@ -81,11 +81,12 @@ test('style cards can be dropped independently into both composition slots', asy
   await expectDocumentFits(page);
 });
 
-test('dragging from another settings tab opens composition and sets the overlay without changing the base', async ({ page }) => {
+test('dragging from the text settings preserves the tab while setting the header overlay', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
   const source = page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' });
+  await source.scrollIntoViewIfNeeded();
   const from = await source.boundingBox();
   expect(from).not.toBeNull();
   await page.evaluate(() => {
@@ -99,7 +100,7 @@ test('dragging from another settings tab opens composition and sets the overlay 
   await page.mouse.down();
   try {
     await page.mouse.move(from!.x + from!.width / 2 + 20, from!.y + from!.height / 2 + 15, { steps: 5 });
-    await expect(page.getByRole('tab', { name: 'レイヤー合成' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'テキスト', exact: true })).toHaveAttribute('aria-selected', 'true');
     const to = await page.locator('[data-layer-slot="02"]').boundingBox();
     expect(to).not.toBeNull();
     await page.mouse.move(to!.x + to!.width / 2, to!.y + to!.height / 2, { steps: 10 });
@@ -108,6 +109,7 @@ test('dragging from another settings tab opens composition and sets the overlay 
   } finally { await page.mouse.up(); }
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('orbit');
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('tunnel');
+  await expect(page.getByRole('tab', { name: 'テキスト', exact: true })).toHaveAttribute('aria-selected', 'true');
   expect(await page.evaluate(() => (window as unknown as { audioDragOverlays: boolean[] }).audioDragOverlays)).toEqual([]);
   await expect(page.locator('.drag-overlay')).toHaveCount(0);
 });
@@ -116,13 +118,14 @@ test('Escape cancels a style drag and clears the drop target highlight', async (
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   const source = page.locator('.sidebar .style-card').filter({ hasText: 'Silk Wave' });
+  await source.scrollIntoViewIfNeeded();
   const from = await source.boundingBox();
   expect(from).not.toBeNull();
   await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
   await page.mouse.down();
   try {
     await page.mouse.move(from!.x + from!.width / 2 + 20, from!.y + from!.height / 2 + 15, { steps: 5 });
-    await expect(page.getByRole('tab', { name: 'レイヤー合成' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'カラー・動き', exact: true })).toHaveAttribute('aria-selected', 'true');
     const target = page.locator('[data-layer-slot="02"]');
     const to = await target.boundingBox();
     expect(to).not.toBeNull();
@@ -134,13 +137,14 @@ test('Escape cancels a style drag and clears the drop target highlight', async (
   await expect(page.locator('.drop-target')).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('orbit');
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('none');
+  await expect(page.getByRole('tab', { name: 'カラー・動き', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.drag-overlay')).toHaveCount(0);
 });
 
 test('dropping an audio file over a layer imports the audio without changing either style', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
-  await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   const base = page.getByRole('combobox', { name: 'ベースのスタイル', exact: true });
   const overlay = page.getByRole('combobox', { name: '重ねるスタイル', exact: true });
   await base.selectOption('wave');

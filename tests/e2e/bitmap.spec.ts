@@ -9,7 +9,7 @@ async function openBitmapPanel(page: Page) {
   await page.getByLabel('サブカラー', { exact: true }).fill('#ffffff');
   await page.getByLabel('背景色', { exact: true }).fill('#000000');
   await page.getByRole('slider', { name: '光の広がり', exact: true }).fill('0');
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
 }
 
@@ -200,7 +200,7 @@ test('transparent PNG, visibility, invalid replacement and removal preserve the 
     await page.getByRole('slider', { name: '明るさ', exact: true }).fill(brightness);
     await nextFrame(page);
     const gradedCorners = await corners();
-    await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
+    await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
     await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
     await load(page, transparent, 'transparent-grade.png');
     expect(await corners(), `transparent areas should retain background grading at brightness ${brightness}`).toEqual(gradedCorners);
@@ -229,9 +229,9 @@ test('PNG, JPEG, WebP and BMP decode into the bitmap layer', async ({ page }) =>
 test('the bitmap stays behind visual styles, composition and editable text', async ({ page }) => {
   await openBitmapPanel(page);
   await load(page, await fixture(page, 'red'), 'red.png');
-  await page.getByRole('tab', { name: 'スタイル合成', exact: true }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption('spectrum');
-  await page.getByLabel('レイヤーの色', { exact: true }).fill('#00ff00');
+  await page.getByLabel('レイヤー02のメインカラー', { exact: true }).fill('#00ff00');
   await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('1');
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
   await page.getByPlaceholder('曲名を入力（任意）').fill('TEXT LAYER');
@@ -239,7 +239,7 @@ test('the bitmap stays behind visual styles, composition and editable text', asy
   await page.getByLabel('文字色', { exact: true }).fill('#ff00ff');
   const combined = await stats(page);
   expect(combined.red).toBeGreaterThan(100000); expect(combined.green).toBeGreaterThan(100); expect(combined.magenta).toBeGreaterThan(100);
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
   await page.getByRole('checkbox', { name: '背景画像を表示', exact: true }).uncheck();
   const hidden = await stats(page);

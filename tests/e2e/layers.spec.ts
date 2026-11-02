@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const motionLabels = ['明るさ', '彩度', '光の広がり', '音への反応', '動きの滑らかさ', '線の太さ'];
 const edit = (page: Page, slot: '01' | '02') => page.getByRole('button', { name: `レイヤー${slot}を編集`, exact: true });
-async function layers(page: Page) { await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click(); }
+async function layers(page: Page) { await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible(); }
 async function controls(page: Page, slot: '01' | '02') {
   await layers(page); await edit(page, slot).click();
   await page.getByRole('tab', { name: 'カラー・動き', exact: true }).click();
@@ -141,7 +141,9 @@ test('drops select the destination layer while cancelling a drag preserves the e
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('tunnel');
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('wave');
   await edit(page, '01').click();
-  const source = (await page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' }).boundingBox())!;
+  const sourceCard = page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' });
+  await sourceCard.scrollIntoViewIfNeeded();
+  const source = (await sourceCard.boundingBox())!;
   await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2); await page.mouse.down();
   try {
     await page.mouse.move(source.x + source.width / 2 + 20, source.y + source.height / 2 + 12, { steps: 5 });

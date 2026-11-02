@@ -65,7 +65,7 @@ try {
     const output = path.join(temporary, `${String(index + 1).padStart(2, '0')}-${style}-${aspect}.mp4`);
     const decoded = path.join(diagnostics, `${style}-${aspect}-last-frame.png`);
     await page.getByRole('button', { name: aspect === 'portrait' ? '縦 9:16' : '横 16:9' }).click();
-    await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+    await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
     await page.getByRole('combobox', { name: 'ベースのスタイル', exact: true }).selectOption(style);
     await page.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption(overlay);
     await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('0.35');
