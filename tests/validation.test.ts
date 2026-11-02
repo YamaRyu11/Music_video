@@ -109,4 +109,11 @@ describe('export IPC boundary', () => {
     }
   });
 
+  it('accepts independent Gaussian blur/backdrops and rejects malformed controls in either layer',()=>{
+    const valid=spec();valid.settings.blur=80;valid.settings.fillBackground=true;valid.settings.overlay.blur=0;valid.settings.overlay.fillBackground=false;expect(()=>validateExport(valid)).not.toThrow();
+    for(const target of ['base','overlay'])for(const invalid of [{blur:-1},{blur:80.1},{blur:Infinity},{blur:NaN},{fillBackground:'true'}]){
+      const bad=spec();Object.assign(target==='base'?bad.settings:bad.settings.overlay,invalid);expect(()=>validateExport(bad)).toThrow();
+    }
+  });
+
 });

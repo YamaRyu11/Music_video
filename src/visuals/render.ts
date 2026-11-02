@@ -8,9 +8,11 @@ import { getTerrainTrack } from './terrain-track';
 import { terrain } from './wire-terrain';
 import { wireObjectRenderers } from './wire-objects';
 import { experimentalRenderers } from './experimental-styles';
+import { kineticRenderers } from './kinetic-styles';
 import { luminousRenderers } from './luminous-styles';
 import { generativeRenderers } from './generative-styles';
 import { captureLineGlow } from './line-glow';
+import { compositeLayer } from './layer-composite';
 import { drawBitmap, type DecodedBitmap } from './bitmap';
 
 function ambient(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, f: Features, s: VisualSettings, transparent = false) {
@@ -170,7 +172,7 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 };
 
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
-  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers, ...luminousRenderers };
+  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers, ...luminousRenderers, ...kineticRenderers };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
   const glow = captureLineGlow(ctx, s, h);
   ctx = glow.ctx;
@@ -232,7 +234,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
     ? sampleFeatures(analysis, time, settings.overlay.smoothing) : features;
   // Grade each graphics layer separately; bitmap and text retain their own colors.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
-  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers), ...Object.keys(luminousRenderers)];
+  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers), ...Object.keys(luminousRenderers), ...Object.keys(kineticRenderers)];
   const context = trackDrivenStyles.includes(settings.style) || trackDrivenStyles.includes(settings.overlay.style)
     ? { track: getTerrainTrack(analysis), analysis } : undefined;
   const { scene, layer } = surfaces(ctx, width, height);
@@ -242,22 +244,16 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   ambient(sceneCtx, w, h, time, features, settings, true);
   drawStyle(sceneCtx, settings.style, w, h, time, features, settings, context);
   sceneCtx.restore();
-  const grade = `saturate(${settings.saturation}) brightness(${settings.brightness})`;
   ctx.save(); ctx.filter = 'none';
   ctx.fillStyle = settings.backgroundColor; ctx.fillRect(0, 0, width, height); ctx.filter = 'none';
   if (bitmap) drawBitmap(ctx, width, height, bitmap, settings.bitmap);
-  ctx.save(); ctx.filter = grade; ctx.globalAlpha = settings.opacity;
-  ctx.globalCompositeOperation = settings.blend;
-  ctx.drawImage(scene, 0, 0); ctx.restore();
+  compositeLayer(ctx, scene, settings, h, settings.backgroundColor);
   if (settings.overlay.style !== 'none' && settings.overlay.opacity > 0) {
     layerCtx.clearRect(0, 0, width, height);
     layerCtx.save(); layerCtx.scale(width / w, height / h);
     drawStyle(layerCtx, settings.overlay.style, w, h, time, overlayFeatures, overlaySettings, context);
     layerCtx.restore();
-    ctx.save(); ctx.globalCompositeOperation = settings.overlay.blend;
-    ctx.globalAlpha = settings.overlay.opacity;
-    ctx.filter = `saturate(${settings.overlay.saturation}) brightness(${settings.overlay.brightness})`;
-    ctx.drawImage(layer, 0, 0); ctx.restore();
+    compositeLayer(ctx, layer, settings.overlay, h, settings.backgroundColor);
   }
   ctx.scale(width / w, height / h);
   const motion = { time, features, intensity: settings.intensity, glow: settings.glow };

@@ -45,7 +45,7 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
     else {
       updateControls({ color: defaults.color, secondaryColor: defaults.secondaryColor, brightness: defaults.brightness,
         saturation: defaults.saturation, glow: defaults.glow, intensity: defaults.intensity,
-        lineGlowEnabled: defaults.lineGlowEnabled, lineGlowStrength: defaults.lineGlowStrength, lineGlowDistance: defaults.lineGlowDistance,
+        blur: defaults.blur, fillBackground: defaults.fillBackground, lineGlowEnabled: defaults.lineGlowEnabled, lineGlowStrength: defaults.lineGlowStrength, lineGlowDistance: defaults.lineGlowDistance,
         smoothing: defaults.smoothing, lineWidth: defaults.lineWidth, scaleX: defaults.scaleX, scaleY: defaults.scaleY, scaleLocked: false, x: defaults.x, y: defaults.y });
     }
   };
@@ -63,6 +63,8 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
           <div className="color-control"><label>メインカラー</label><div className="swatches">{colors.map(c => <button key={c} title={c} aria-label={`カラー ${c}`} aria-pressed={controls.color === c} className={`swatch ${controls.color === c ? 'chosen' : ''}`} style={{ backgroundColor: c }} onClick={() => updateControls({ color: c })}>{controls.color === c && <Check size={13} />}</button>)}<label className="custom-color" title="カスタムカラー"><span>＋</span><ColorInput label="カスタムカラー" value={controls.color} disabled={disabled} onChange={v => updateControls({ color: v })} /></label></div></div>
           <div className="design-grid color-detail"><ColorField label="サブカラー" value={controls.secondaryColor} onChange={v => updateControls({ secondaryColor: v })} /></div>
           <div className="inspector-blend-controls design-grid"><label>合成方法<select aria-label="合成方法" value={controls.blend} onChange={e => updateControls({ blend: e.target.value as LayerControls['blend'] })}><option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option></select></label><Slider label="レイヤーの不透明度" defaultValue={defaults.opacity} value={controls.opacity} min={0} max={1} onChange={v => updateControls({ opacity: v })} /></div>
+          <label className="layer-background-toggle"><input type="checkbox" checked={controls.fillBackground} onChange={e=>updateControls({fillBackground:e.target.checked})}/>レイヤーの背景を塗る</label>
+          <p className="field-note">{controls.fillBackground ? '共通背景色で透明部分を塗ります。通常・不透明度100%で下のレイヤーを隠します。' : '透明部分と図形の半透明を保ちます。不透明度100%でも下のレイヤーが透けます。'}</p>
           <div className="design-grid three-columns">
             <Slider label="明るさ" defaultValue={defaults.brightness} value={controls.brightness} min={.5} max={1.5} onChange={v => updateControls({ brightness: v })} />
             <Slider label="彩度" defaultValue={defaults.saturation} value={controls.saturation} min={0} max={2} onChange={v => updateControls({ saturation: v })} />
@@ -75,6 +77,8 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
           <fieldset disabled={!lineWidthEnabled} className="line-width-control"><Slider label="線の太さ" defaultValue={defaults.lineWidth} value={controls.lineWidth} min={.1} max={5} step={.05} onChange={v => updateControls({ lineWidth: v })} /></fieldset>
           <p className="field-note">{lineWidthEnabled ? lineWidthHelp(controls.style) : controls.style === 'none'
             ? 'スタイルを選ぶと、対応する線の太さを調整できます。' : '面で構成するスタイルのため、線の太さは適用されません。'}</p>
+          <Slider label="映像のガウスぼかし" defaultValue={defaults.blur} value={controls.blur} min={0} max={80} step={1} scale={1} suffix=" px" onChange={v=>updateControls({blur:v})}/>
+          <p className="field-note">選択した映像だけをぼかします。単位は出力動画のpxです。</p>
           <fieldset className="line-glow-controls" disabled={!lineWidthEnabled}>
             <label className="line-glow-toggle"><input type="checkbox" checked={controls.lineGlowEnabled} onChange={e=>updateControls({lineGlowEnabled:e.target.checked})}/>線のグローを有効にする</label>
             <fieldset disabled={!controls.lineGlowEnabled} className="design-grid">
