@@ -17,7 +17,7 @@ const flowfield: StyleRenderer = (ctx, w, h, t, f, s, context) => {
   const gradient = ctx.createLinearGradient(w * .13, h * .25, w * .87, h * .65);
   gradient.addColorStop(0, alpha(s.color, .36 + s.glow * .2));
   gradient.addColorStop(1, alpha(s.secondaryColor, .36 + s.glow * .2));
-  ctx.strokeStyle = gradient; ctx.lineWidth = unit * .00125; ctx.lineCap = 'round';
+  ctx.strokeStyle = gradient; ctx.lineWidth = (unit * .00125) * s.lineWidth; ctx.lineCap = 'round';
   for (let stream = 0; stream < 36; stream++) {
     let x = (noise(stream + seed + 13) * 2 - 1) * 1.13;
     let y = (noise(stream + seed + 203) * 2 - 1) * .95;
@@ -75,7 +75,7 @@ const chladni: StyleRenderer = (ctx, w, h, t, f, s, context) => {
     ctx.fillStyle = alpha(group ? s.secondaryColor : s.color, .58 + s.glow * .28); ctx.fill();
   }
   ctx.beginPath(); ctx.roundRect(-half * 1.04, -half * 1.04, half * 2.08, half * 2.08, unit * .012);
-  ctx.strokeStyle = alpha(s.secondaryColor, .1 + s.glow * .07); ctx.lineWidth = unit * .0008; ctx.stroke();
+  ctx.strokeStyle = alpha(s.secondaryColor, .1 + s.glow * .07); ctx.lineWidth = (unit * .0008) * s.lineWidth; ctx.stroke();
 };
 
 /** Two slightly misaligned, warped line sheets produce a moving moiré weave. */
@@ -85,7 +85,7 @@ const moire: StyleRenderer = (ctx, w, h, t, f, s, context) => {
   const halfWidth = unit * .385, halfHeight = unit * .31;
   ctx.translate(w / 2, h * .45); ctx.rotate(-.045);
   ctx.beginPath(); ctx.roundRect(-halfWidth, -halfHeight, halfWidth * 2, halfHeight * 2, unit * .025); ctx.clip();
-  ctx.globalCompositeOperation = 'screen'; ctx.lineWidth = unit * .0011;
+  ctx.globalCompositeOperation = 'screen'; ctx.lineWidth = (unit * .0011) * s.lineWidth;
   for (let sheet = 0; sheet < 2; sheet++) {
     ctx.save();
     const angle = sheet ? .12 + Math.sin(t * .18 + seedPhase) * .055 + f.attack * gain * .035 : -.105;
@@ -134,7 +134,7 @@ const helix: StyleRenderer = (ctx, w, h, t, f, s, context) => {
     }
     strips.push(points);
   }
-  ctx.lineWidth = unit * .0008; ctx.strokeStyle = alpha(s.secondaryColor, .13 + s.glow * .07);
+  ctx.lineWidth = (unit * .0008) * s.lineWidth; ctx.strokeStyle = alpha(s.secondaryColor, .13 + s.glow * .07);
   ctx.beginPath();
   for (let i = 0; i <= 80; i += 4) { ctx.moveTo(strips[0][i].x, strips[0][i].y); ctx.lineTo(strips[1][i].x, strips[1][i].y); }
   ctx.stroke();

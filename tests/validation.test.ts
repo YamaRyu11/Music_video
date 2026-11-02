@@ -24,7 +24,7 @@ describe('export IPC boundary', () => {
   it('accepts every style with independently styled text and a valid overlay', () => {
     for (const style of STYLE_IDS) {
       const value = spec(); value.settings.style = style;
-      value.settings.overlay = { style: 'wave', color: '#ff95b5', opacity: .65, blend: 'screen' };
+      value.settings.overlay = { ...value.settings.overlay, style: 'wave', color: '#ff95b5', opacity: .65, blend: 'screen' };
       value.settings.titleDesign = { ...value.settings.titleDesign, font: 'serif', size: 96, italic: true, weight: 700 };
       expect(() => validateExport(value)).not.toThrow();
     }
@@ -62,5 +62,26 @@ describe('export IPC boundary', () => {
       v => { v.bitmapId = {} as never; },
     ];
     for (const mutate of cases) { const value = spec(); mutate(value); expect(() => validateExport(value)).toThrow(); }
+  });
+  it('accepts independent overlay controls and both stroke-width limits', () => {
+    const value = spec(); value.settings.lineWidth = .1;
+    Object.assign(value.settings.overlay, { style: 'wave', color: '#ff245f', secondaryColor: '#79acff',
+      brightness: .5, saturation: 0, glow: 0, intensity: 10, smoothing: 2, lineWidth: 5 });
+    expect(() => validateExport(value)).not.toThrow();
+    value.settings.lineWidth = 5; value.settings.overlay.lineWidth = .1;
+    expect(() => validateExport(value)).not.toThrow();
+  });
+  it('rejects malformed controls in either graphics layer, including hidden overlays', () => {
+    const invalid = { secondaryColor: 'external(url)', brightness: 0, saturation: 2.01, glow: Infinity,
+      intensity: 10.01, smoothing: 2.01, lineWidth: 0 };
+    for (const target of ['base', 'overlay'] as const) for (const [key, bad] of Object.entries(invalid)) {
+      const value = spec(); const layer = target === 'base' ? value.settings : value.settings.overlay;
+      Object.assign(layer, { [key]: bad });
+      expect(() => validateExport(value)).toThrow();
+    }
+    for (const lineWidth of [NaN, Infinity, -.1, 5.01]) {
+      const value = spec(); value.settings.overlay.lineWidth = lineWidth;
+      expect(() => validateExport(value)).toThrow();
+    }
   });
 });

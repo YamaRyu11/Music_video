@@ -115,7 +115,7 @@ export const terrain: StyleRenderer = (ctx, w, h, time, features, settings, cont
   for (let row = rows.length - 1; row >= 0; row--) {
     const distance = rows[row].worldZ - cameraZ;
     const fade = (1 - clamp(distance / far, 0, 1)) ** 0.72;
-    ctx.lineWidth = 0.65 + fade * 0.75;
+    ctx.lineWidth = (0.65 + fade * 0.75) * settings.lineWidth;
     ctx.strokeStyle = alpha(settings.color, (0.12 + fade * 0.58) * (0.8 + settings.glow * 0.25));
     path(rows[row].points.slice(0, 13));
     ctx.strokeStyle = alpha(settings.secondaryColor, (0.12 + fade * 0.58) * (0.8 + settings.glow * 0.25));
@@ -126,7 +126,7 @@ export const terrain: StyleRenderer = (ctx, w, h, time, features, settings, cont
     const color = OFFSETS[column] < 0 ? settings.color : settings.secondaryColor;
     const road = Math.abs(OFFSETS[column]) < 2;
     ctx.strokeStyle = alpha(color, road ? 0.18 : 0.28 + settings.glow * 0.12);
-    ctx.lineWidth = road ? 0.75 : 0.9;
+    ctx.lineWidth = (road ? 0.75 : 0.9) * settings.lineWidth;
     path(rows.map(row => row.points[column]));
   }
   // Two thin world-fixed verge lines make the open center legible as a route.
@@ -137,6 +137,6 @@ export const terrain: StyleRenderer = (ctx, w, h, time, features, settings, cont
     });
     ctx.strokeStyle = alpha(side < 0 ? settings.color : settings.secondaryColor,
       0.5 + features.level * settings.intensity * 0.16);
-    ctx.lineWidth = 1.35; path(points);
+    ctx.lineWidth = (1.35) * settings.lineWidth; path(points);
   }
 };
