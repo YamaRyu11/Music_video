@@ -3,7 +3,10 @@
 WAV / MP3 から、音に反応するフルHD動画をつくるWindows向けデスクトップアプリ。
 **ZIPを展開してEXEを起動する、インストール不要のフォルダ型ポータブル版**です。
 
-## v0.12.0 の機能
+## v0.13.0 の機能
+
+- 01／02それぞれのガウスぼかし（0〜80px）と、透明部分を共通背景色で塗るチェック
+- Jellyfish Ballet / Interference Pool / Fibonacci Spiral / Astral Sigils / Origami Flight / Ribbon Planet / Sunburst Dial / Hexwave Arrayを追加
 
 - 線のグローを01／02別々にオン・オフ。強さ0〜300%・フェード距離0〜160px
 - Harmonic Rose / Pendulum Choir / Gyroid Lattice / Spectral Braid / Harmonic Scope / Sonar Rings / Woven Ribbons / Orbital Orreryを追加
@@ -18,7 +21,7 @@ WAV / MP3 から、音に反応するフルHD動画をつくるWindows向けデ�
 
 - 音源のドラッグ＆ドロップ・ファイル選択・オリジナルのサンプル音源
 - 音量（RMS）・アタック（スペクトルの立ち上がり）・48帯域の周波数解析
-- 全40スタイル。Flow Field / Chladni Sand / Moire Weave / Ribbon Helixなどを収録
+- 全48スタイル。Flow Field / Chladni Sand / Moire Weave / Ribbon Helixなどを収録
 - 横1920×1080 / 縦1080×1920、30fps
 - カテゴリ（ミニマル・発光・幾何学・有機的・空間・タイポグラフィ・ワイヤーフレーム）とスタイル名・説明での検索
 - 全体スクロールなしのカラム型ワークスペース。プレビューは比率を保って可変サイズ、縦動画は設定を右に配置
@@ -72,6 +75,8 @@ npm run test:desktop
 npm run test:new-styles
 npm run test:wireframes
 npm run test:bitmap
+npm run test:layer-effects
+npm run test:kinetic
 npm run test:line-glow
 npm run test:luminous
 npm run test:experimental
@@ -80,7 +85,7 @@ npm run test:generative
 
 - ユニットテスト: FFTの周波数検出、無音、音量差、アタック、位相反転ステレオ、地形の履歴、背景画像の切り抜き・配置、01／02の独立設定と線幅の範囲、IPC入力検証。
 - エンコードテスト: 同梱FFmpegで実際に生成したMP4を`ffprobe`で検査します。開発機には`ffprobe`を用意してください。
-- ブラウザ操作テスト: 音源読み込み・再生・シーク・40スタイル・カテゴリ・検索・縦横切替・色調整・合成・文字編集・不正ファイルの処理。不透明度0の合成はベースと画素が同じになることも検査します。01／02の編集対象・左一覧の適用先・文脈に応じたリセット・線幅も確認します。上部ヘッダーの常設、メイン／サブ色の同期、カードに連動して設定パネルが切り替わることも確認します。
+- ブラウザ操作テスト: 音源読み込み・再生・シーク・48スタイル・カテゴリ・検索・縦横切替・色調整・合成・文字編集・不正ファイルの処理。不透明度0の合成はベースと画素が同じになることも検査します。01／02の編集対象・左一覧の適用先・文脈に応じたリセット・線幅も確認します。上部ヘッダーの常設、メイン／サブ色の同期、カードに連動して設定パネルが切り替わることも確認します。
 - 背景画像操作テスト: PNG / JPEG / WebP / BMP、切り抜き・配置・ぼかし・彩度・明るさ・不透明度、表示切替と不正な画像の処理をCanvasの画素で検査します。
 - 微調整テスト: 通常／Shiftドラッグ、途中でのShift切替、Shift＋矢印、反応1000%・滑らかさ200%を検査します。
 - Chromiumは標準で`/usr/bin/chromium`を使用します。別の環境では`CHROMIUM_PATH`に実行ファイルを指定してください。
@@ -97,7 +102,7 @@ npm run test:generative
 
 クラウド内の`/workspace/...`へのリンクは、PCへ保存できるダウンロードURLではありません。
 GitHubでこのリポジトリの **Actions → Windows portable build → 成功した実行** を開き、
-画面下部の **Artifacts → MusicVideoStudio-0.12.0-Windows-x64** をクリックしてください。
+画面下部の **Artifacts → MusicVideoStudio-0.13.0-Windows-x64** をクリックしてください。
 GitHubへのログインが必要です。成果物の保存期間は30日です。
 期限が切れた場合は **Run workflow** で再作成できます。
 
@@ -110,7 +115,7 @@ GitHubへのログインが必要です。成果物の保存期間は30日です
 npm run dist:win
 ```
 
-成果物: `release/MusicVideoStudio-0.12.0-Windows-x64.zip`
+成果物: `release/MusicVideoStudio-0.13.0-Windows-x64.zip`
 
 ElectronとWindows用FFmpegを含めてパッケージングします。Linux上でのクロスビルドにも対応し、
 Windows用FFmpegの取得時にはロックファイルのSHA-512を照合します。ビルドは公開・アップロードを行いません。
@@ -275,3 +280,12 @@ Hは色相（0〜360度）、Sは彩度、Bは明度（0〜100%）です。色�
 線を描いた色で、近くの光と遠くまでぼける光を加算します。線の芯は保ちます。背景画像・文字・面の塗りは発光源にせず、合成方法・不透明度・色補正はそれぞれのレイヤーに従います。通常の「光の広がり」はスタイル固有の演出で、今回の線のグローとは独立しています。
 
 Glitch Blocksは線がないため操作できません。Spectrumは基準線、Particle Flowは軌跡、Chladni Sandは外枠が対象です。フレーム履歴を蓄積せず、プレビュー・シーク・MP4で同じ時刻を再現します。
+
+
+## 通常合成・透明部分・ガウスぼかし（v0.13.0）
+
+02は01より上に描画されます。「通常・不透明度100%」はレイヤー全体の不透明度であり、図形のない透明部分や線そのものの半透明は残ります。下のレイヤーを完全に隠す場合は、「カラー・動き」で「レイヤーの背景を塗る」をチェックし、通常・100%にします。透明部分にはヘッダー左端の共通背景色を使い、背景色はレイヤーの色補正・ぼかしで変化しません。初期状態はオフです。
+
+01／02それぞれの「映像のガウスぼかし」は0〜80px（初期値0px）。出力動画のpxを基準に、選択した映像とグローをまとめてぼかします。背景画像と文字は別です。Shiftで微調整、ダブルクリックで0pxへ戻ります。
+
+背景を塗ってぼかした場合もフレームの端は不透明です。レイヤーの不透明度は背景と図形をまとめて一度だけ適用し、100%未満では下が透けます。スクリーン・乗算などは背景色を含めたレイヤーをそれぞれの方式で合成します。

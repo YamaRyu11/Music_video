@@ -62,3 +62,6 @@
 .line-glow-controls > .design-grid {padding:0;border:0;margin:0;min-width:0}
 .line-glow-controls .field-note {margin-bottom:0}
 .line-glow-controls:disabled {opacity:.5}
+
+.layer-background-toggle {display:flex;align-items:center;gap:8px;margin:9px 0 6px;color:#d4e1d7;font-size:12px;cursor:pointer}
+.layer-background-toggle input {accent-color:#b8f36b}

@@ -51,6 +51,14 @@ export const styles: StyleDefinition[] = [
   {id:'sonar', title:'Sonar Rings', subtitle:'音と波打ち、奥へ広がる水面の輪', className:'art-sonar', category:'space'},
   {id:'ribbons', title:'Woven Ribbons', subtitle:'音色でほぐれる、ふた色の織物', className:'art-ribbons', category:'organic'},
   {id:'orrery', title:'Orbital Orrery', subtitle:'音で膨らむ天体が巡る、立体の天球儀', className:'art-orrery', category:'space'},
+  {id:'jellyfish',title:'Jellyfish Ballet',subtitle:'低音で呼吸し、音色で触手が揺れるクラゲ',className:'art-jellyfish',category:'organic'},
+  {id:'ripple-grid',title:'Interference Pool',subtitle:'二つの波が干渉する、立体の水面メッシュ',className:'art-ripple-grid',category:'wireframe'},
+  {id:'fibonacci',title:'Fibonacci Spiral',subtitle:'黄金角の光点と螺旋が、音にひらく',className:'art-fibonacci',category:'geometry'},
+  {id:'sigils',title:'Astral Sigils',subtitle:'音色で構造が変わる、回転する幾何学の紋章',className:'art-sigils',category:'geometry'},
+  {id:'origami',title:'Origami Flight',subtitle:'周波数で翼を折り、漂う光の群れ',className:'art-origami',category:'space'},
+  {id:'ribbon-sphere',title:'Ribbon Planet',subtitle:'音にねじれ、球面を包む光のリボン',className:'art-ribbon-sphere',category:'space'},
+  {id:'sundial',title:'Sunburst Dial',subtitle:'周波数を刻む、光の目盛りと回転針',className:'art-sundial',category:'minimal'},
+  {id:'hexwave',title:'Hexwave Array',subtitle:'音で浮き沈みする、六角形の波',className:'art-hexwave',category:'geometry'},
 ];
 
 export function supportsLineWidth(style: StyleId | 'none'): boolean {

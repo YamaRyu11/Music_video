@@ -34,6 +34,14 @@ function NewStyleArt({ kind }: { kind: string }) {
     {kind === 'art-sonar' && Array.from({length:7},(_,i)=><ellipse key={i} cx="32" cy={18+i*2} rx={4+i*4} ry={2+i*1.6} opacity={1-i*.1}/>)}
     {kind === 'art-ribbons' && Array.from({length:8},(_,i)=><path key={i} d={`M3 ${12+i*3}C24 ${-4+i*4} 37 ${52-i*3} 61 ${13+i*3}`} opacity=".7"/>)}
     {kind === 'art-orrery' && <>{[8,14,20,26].map((r,i)=><g key={r}><ellipse cx="32" cy="24" rx={r} ry={r*.55} transform={`rotate(${i*9} 32 24)`}/><circle cx={32+r*.7} cy={24-r*.38} r="2" fill="#67e8d0"/></g>)}<circle cx="32" cy="24" r="3"/></>}
+    {kind === 'art-jellyfish' && <><path d="M13 18C13 -3 51 -3 51 18Q32 24 13 18Z"/>{Array.from({length:8},(_,i)=><path key={i} d={`M${17+i*4} 19q-5 8 1 13t-2 13`} opacity=".7"/>)}</>}
+    {kind === 'art-ripple-grid' && Array.from({length:8},(_,i)=><polyline key={i} points={Array.from({length:22},(_,j)=>`${4+j*2.6},${12+i*3.7+Math.sin(j*.55+i*.5)*Math.cos(j*.25-i*.7)*4}`).join(' ')} opacity=".7"/>)}
+    {kind === 'art-fibonacci' && Array.from({length:120},(_,i)=>{const a=i*2.39996,r=Math.sqrt(i/120)*22;return <circle key={i} cx={32+Math.cos(a)*r} cy={24+Math.sin(a)*r} r=".7" fill="#67e8d0"/>})}
+    {kind === 'art-sigils' && <><circle cx="32" cy="24" r="21"/><circle cx="32" cy="24" r="16"/><path d="M32 6L43 38L15 18H49L21 38ZM32 13L43 31H21Z" opacity=".8"/></>}
+    {kind === 'art-origami' && [0,1,2,3].map(i=><path key={i} d={`M${9+i*13} ${18+i%2*13}l10 -7 -4 10 -9 5 3 -8 10 -7`} fill="#67e8d0" fillOpacity=".12"/>)}
+    {kind === 'art-ribbon-sphere' && Array.from({length:12},(_,i)=><path key={i} d={`M32 4C${-4+i*6} 13 ${68-i*6} 34 32 44`} opacity=".65"/>)}
+    {kind === 'art-sundial' && <><circle cx="32" cy="24" r="15" opacity=".5"/>{Array.from({length:36},(_,i)=>{const a=i/36*Math.PI*2;return <path key={i} d={`M${32+Math.cos(a)*19} ${24+Math.sin(a)*19}l${Math.cos(a)*3} ${Math.sin(a)*3}`}/>})}<path d="M32 24L44 13"/></>}
+    {kind === 'art-hexwave' && Array.from({length:24},(_,i)=>{const x=9+i%6*9+(Math.floor(i/6)%2)*4,y=10+Math.floor(i/6)*9;return <polygon key={i} points={Array.from({length:6},(_,j)=>`${x+Math.cos(j*Math.PI/3)*5},${y+Math.sin(j*Math.PI/3)*3.5}`).join(' ')} fill="#67e8d0" fillOpacity=".06"/>})}
   </svg>;
 }
 

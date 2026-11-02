@@ -2,7 +2,8 @@ export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'a
   'laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography',
   'terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix',
   'waterfall', 'phosphor', 'radar', 'metaballs', 'fractal', 'torus-knot', 'cells', 'crystal',
-  'rose', 'pendulum', 'gyroid', 'braid', 'oscilloscope', 'sonar', 'ribbons', 'orrery'] as const;
+  'rose', 'pendulum', 'gyroid', 'braid', 'oscilloscope', 'sonar', 'ribbons', 'orrery',
+  'jellyfish', 'ripple-grid', 'fibonacci', 'sigils', 'origami', 'ribbon-sphere', 'sundial', 'hexwave'] as const;
 export type StyleId = typeof STYLE_IDS[number];
 export type Aspect = 'landscape' | 'portrait';
 export type FontId = 'sans' | 'serif' | 'mono' | 'meiryo';
@@ -62,6 +63,8 @@ export interface LayerControls {
   intensity: number;
   smoothing: number;
   lineWidth: number;
+  blur: number;
+  fillBackground: boolean;
   lineGlowEnabled: boolean;
   lineGlowStrength: number;
   lineGlowDistance: number;
@@ -73,7 +76,7 @@ export interface LayerControls {
 }
 export const defaultLayerControls: LayerControls = {
   opacity: 1, blend: 'source-over', color: '#b8f36b', secondaryColor: '#67e8d0', brightness: 1, saturation: 1,
-  lineGlowEnabled: false, lineGlowStrength: 1, lineGlowDistance: 24,
+  blur: 0, fillBackground: false, lineGlowEnabled: false, lineGlowStrength: 1, lineGlowDistance: 24,
   glow: .5, intensity: 1, smoothing: .5, lineWidth: 1, scaleX: 1, scaleY: 1, scaleLocked: false, x: 0, y: 0,
 };
 export interface VisualSettings extends LayerControls {
