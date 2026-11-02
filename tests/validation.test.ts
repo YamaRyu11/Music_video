@@ -93,10 +93,10 @@ describe('export IPC boundary', () => {
   });
 
   it('accepts independent transforms and rejects unsafe transforms in either layer', () => {
-    const value=spec();Object.assign(value.settings,{scaleX:.1,scaleY:5,x:-1,y:1});
-    Object.assign(value.settings.overlay,{scaleX:5,scaleY:.1,x:1,y:-1});
+    const value=spec();Object.assign(value.settings,{scaleX:.1,scaleY:5,scaleLocked:true,x:-1,y:1});
+    Object.assign(value.settings.overlay,{scaleX:5,scaleY:.1,scaleLocked:true,x:1,y:-1});
     expect(()=>validateExport(value)).not.toThrow();
-    for(const target of ['base','overlay']) for(const [key,v] of Object.entries({scaleX:0,scaleY:Infinity,x:1.1,y:NaN})) {
+    for(const target of ['base','overlay']) for(const [key,v] of Object.entries({scaleX:0,scaleY:Infinity,x:1.1,y:NaN,scaleLocked:'true'})) {
       const bad=spec();Object.assign(target==='base'?bad.settings:bad.settings.overlay,{[key]:v});expect(()=>validateExport(bad)).toThrow();
     }
   });

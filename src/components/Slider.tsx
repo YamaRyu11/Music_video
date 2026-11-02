@@ -7,6 +7,8 @@ interface RangeProps {
   step: number;
   onValueChange: (value: number) => void;
   disabled?: boolean;
+  defaultValue: number;
+  onReset?: () => void;
   'aria-label': string;
   id?: string;
   className?: string;
@@ -27,7 +29,7 @@ function snap(value: number, step: number, min: number, max: number, anchor = mi
 }
 
 /** Native range semantics with a relative, ten-times-finer Shift drag. */
-export function RangeInput({ value, min, max, step, onValueChange, disabled, ...attributes }: RangeProps) {
+export function RangeInput({ value, min, max, step, onValueChange, disabled, defaultValue, onReset, ...attributes }: RangeProps) {
   const drag = useRef<Drag | null>(null);
   const current = useRef(value); current.current = value;
   const fineStep = step / 10;
@@ -41,8 +43,17 @@ export function RangeInput({ value, min, max, step, onValueChange, disabled, ...
     drag.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
-  return <input {...attributes} type="range" value={value} min={min} max={max} step={fineStep} disabled={disabled}
-    style={{ touchAction: 'none' }}
+  // Linked axes can hold values between grid points. Avoid native step rounding;
+  // pointer, keyboard and accessibility changes are quantized explicitly below.
+  return <input {...attributes} type="range" value={value} min={min} max={max} step="any" disabled={disabled}
+    style={{ touchAction: 'none' }} title="ダブルクリックで初期値に戻す・Shift＋ドラッグで微調整"
+    onDoubleClick={event => {
+      if (event.currentTarget.matches(':disabled')) return;
+      event.preventDefault();
+      const pointer = drag.current?.pointer; drag.current = null;
+      if (pointer !== undefined && event.currentTarget.hasPointerCapture(pointer)) event.currentTarget.releasePointerCapture(pointer);
+      if (onReset) onReset(); else emit(clamp(defaultValue, min, max));
+    }}
     onChange={event => { if (!drag.current && !event.currentTarget.matches(':disabled')) emit(snap(Number(event.target.value), fineStep, min, max)); }}
     onPointerDown={event => {
       if (event.button !== 0 || event.currentTarget.matches(':disabled') || max <= min) return;
@@ -86,11 +97,11 @@ export function RangeInput({ value, min, max, step, onValueChange, disabled, ...
     }} />;
 }
 
-export function Slider({ label, value, min, max, step = .05, suffix = '%', scale = 100, onChange }: {
-  label: string; value: number; min: number; max: number; step?: number; suffix?: string; scale?: number; onChange: (value: number) => void;
+export function Slider({ label, value, min, max, step = .05, suffix = '%', scale = 100, defaultValue, onReset, onChange }: {
+  label: string; value: number; min: number; max: number; defaultValue: number; onReset?: () => void; step?: number; suffix?: string; scale?: number; onChange: (value: number) => void;
 }) {
   const display = new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2, useGrouping: false }).format(value * scale);
   return <label className="design-slider"><span>{label}<output>{display}{suffix}</output></span>
-    <RangeInput aria-label={label} min={min} max={max} step={step} value={value} onValueChange={onChange} />
+    <RangeInput aria-label={label} min={min} max={max} step={step} value={value} defaultValue={defaultValue} onReset={onReset} onValueChange={onChange} />
   </label>;
 }

@@ -18,6 +18,14 @@ function NewStyleArt({ kind }: { kind: string }) {
     {kind === 'art-chladni' && Array.from({ length: 70 }, (_, i) => <circle key={i} cx={32 + Math.cos(i * 1.7) * (5 + i % 14)} cy={24 + Math.sin(i * 3.4) * (5 + i % 14)} r=".65" fill="#b8f36b" stroke="none" />)}
     {kind === 'art-moire' && <>{Array.from({ length: 10 }, (_, i) => <path key={i} d={`M${8 + i * 5} 4l-5 40M${2 + i * 5} 5l16 38`} opacity=".45" />)}</>}
     {kind === 'art-helix' && <>{[0, 1].map(p => <polyline key={p} points={Array.from({ length: 60 }, (_, i) => `${4 + i / 59 * 56},${24 + Math.sin(i / 59 * Math.PI * 4 + p * Math.PI) * 13}`).join(' ')} opacity=".8" />)}{Array.from({ length: 12 }, (_, i) => <path key={i} d={`M${5 + i * 4.8} ${24 + Math.sin(i / 11 * Math.PI * 4) * 13}V${24 - Math.sin(i / 11 * Math.PI * 4) * 13}`} opacity=".3" />)}</>}
+    {kind === 'art-waterfall' && Array.from({length:9},(_,i)=><polyline key={i} points={Array.from({length:15},(_,j)=>`${5+j*3.7+i*.6},${11+i*3.6-Math.sin(j*.8+i*.5)**2*(3+i*.7)}`).join(' ')} opacity={.25+i*.07}/>)}
+    {kind === 'art-phosphor' && Array.from({length:8},(_,i)=><ellipse key={i} cx={31+i*.7} cy="24" rx={9+i*2.5} ry={7+i*1.7} transform={`rotate(${i*9} 32 24)`} opacity={.8-i*.08}/>)}
+    {kind === 'art-radar' && <><circle cx="32" cy="24" r="20"/><circle cx="32" cy="24" r="12" opacity=".5"/><path d="M12 24H52M32 4V44M32 24L48 11" opacity=".7"/>{[[21,15],[39,31],[28,38]].map(([x,y])=><circle key={x} cx={x} cy={y} r="2" fill="#67e8d0"/>)}</>}
+    {kind === 'art-metaballs' && <><path d="M10 29C1 10 22 2 29 13C34 20 38 1 51 9C66 20 54 33 43 30C31 26 26 45 15 37Z"/><path d="M16 28C6 12 25 8 29 18C34 26 41 7 49 15C56 24 48 28 40 25C30 22 25 38 16 28Z" opacity=".5"/></>}
+    {kind === 'art-fractal' && <><path d="M32 45V29L20 18L12 13M20 18L19 7M32 29L44 18L52 13M44 18L45 7M32 35L15 30L7 21M15 30L7 34M32 35L49 30L57 21M49 30L57 34"/><path d="M12 13L6 12M52 13L58 12" opacity=".5"/></>}
+    {kind === 'art-torus-knot' && <>{[0,1,2].map(i=><polyline key={i} points={Array.from({length:160},(_,j)=>{const a=j/159*Math.PI*2,r=14+5*Math.cos(a*3);return `${32+Math.cos(a*2)*r+i*.6},${24+Math.sin(a*2)*r*.75+Math.sin(a*3)*4}`;}).join(' ')} opacity={.8-i*.22}/>)}</>}
+    {kind === 'art-cells' && <><path d="M4 8L20 4L30 14L24 28L6 25ZM32 14L45 5L59 13L55 30L39 31ZM6 28L24 31L29 43L9 44ZM27 29L32 17L38 33L55 34L57 44L32 44Z" fill="#67e8d0" fillOpacity=".08"/></>}
+    {kind === 'art-crystal' && <>{[0,1,2].map(i=><g key={i} transform={`translate(${8+i*19} ${9+i%2*8}) rotate(${i*17})`}><path d="M6 0L12 13L6 29L0 13ZM6 0V29M0 13H12" fill="#67e8d0" fillOpacity=".15"/></g>)}</>}
   </svg>;
 }
 

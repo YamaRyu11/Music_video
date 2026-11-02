@@ -272,7 +272,7 @@ export function App() {
         <div className="transport">
           <button className="play-button" onClick={togglePlay} disabled={!asset || locked} aria-label={playing ? '一時停止' : '再生'}>{playing ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}</button>
           <span className="time-current">{formatTime(time)}</span>
-          <div className="timeline"><Waveform peaks={analysis?.peaks} progress={duration ? time / duration : 0} /><RangeInput aria-label="再生位置" min={0} max={duration || 1} step={.01} value={Math.min(time, duration)} disabled={!asset || locked} onValueChange={seek} /></div>
+          <div className="timeline"><Waveform peaks={analysis?.peaks} progress={duration ? time / duration : 0} /><RangeInput aria-label="再生位置" defaultValue={0} min={0} max={duration || 1} step={.01} value={Math.min(time, duration)} disabled={!asset || locked} onValueChange={seek} /></div>
           <span className="time-total">{formatTime(duration)}</span><Volume2 className="volume-icon" size={17} />
         </div>
         </section>

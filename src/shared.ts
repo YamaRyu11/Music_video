@@ -1,6 +1,7 @@
 export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'aurora',
   'laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography',
-  'terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix'] as const;
+  'terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix',
+  'waterfall', 'phosphor', 'radar', 'metaballs', 'fractal', 'torus-knot', 'cells', 'crystal'] as const;
 export type StyleId = typeof STYLE_IDS[number];
 export type Aspect = 'landscape' | 'portrait';
 export type FontId = 'sans' | 'serif' | 'mono' | 'meiryo';
@@ -62,12 +63,13 @@ export interface LayerControls {
   lineWidth: number;
   scaleX: number;
   scaleY: number;
+  scaleLocked: boolean;
   x: number;
   y: number;
 }
 export const defaultLayerControls: LayerControls = {
   opacity: 1, blend: 'source-over', color: '#b8f36b', secondaryColor: '#67e8d0', brightness: 1, saturation: 1,
-  glow: .5, intensity: 1, smoothing: .5, lineWidth: 1, scaleX: 1, scaleY: 1, x: 0, y: 0,
+  glow: .5, intensity: 1, smoothing: .5, lineWidth: 1, scaleX: 1, scaleY: 1, scaleLocked: false, x: 0, y: 0,
 };
 export interface VisualSettings extends LayerControls {
   style: StyleId;
