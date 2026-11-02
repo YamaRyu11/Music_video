@@ -1,3 +1,4 @@
+import { openInspector } from './inspector.mjs';
 import { _electron as electron, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -47,7 +48,7 @@ try {
     await page.getByRole('slider', { name: '音への反応', exact: true }).fill('10');
     await page.getByRole('slider', { name: '動きの滑らかさ', exact: true }).fill('2');
   }
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('曲名を入力（任意）').fill('NEW STYLE TEST');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill(generative ? '新4スタイル・合成検証' : wireframes ? 'ワイヤーフレーム・合成検証' : '新10スタイル・合成検証');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('70');

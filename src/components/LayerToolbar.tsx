@@ -3,7 +3,7 @@ import { ImagePlus, LoaderCircle, Trash2 } from 'lucide-react';
 import type { LayerControls, LayerTarget, StyleId, VisualSettings } from '../shared';
 import { styles } from '../visuals/catalog';
 import { droppedStyle, isStyleDrag } from '../visuals/style-drag';
-import { Slider } from './Slider';
+
 
 function LayerCard({ slot, selected, style, controls, disabled, draggingStyle, onSelect, onStyle, onColors }: {
   slot: '01' | '02'; selected: boolean; style: StyleId | 'none'; controls: LayerControls;
@@ -55,20 +55,21 @@ function LayerCard({ slot, selected, style, controls, disabled, draggingStyle, o
 }
 
 export function LayerToolbar({ settings, onChange, selectedLayer, onSelectLayer, disabled, draggingStyle,
-  bitmapAsset, bitmapBusy, onChooseBitmap, onEditBitmap, onRemoveBitmap }: {
+  bitmapAsset, bitmapBusy, onChooseBitmap, onEditBitmap, onRemoveBitmap, bitmapSelected, textSelected, textTarget, onEditText }: {
   settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>;
-  selectedLayer: LayerTarget; onSelectLayer: (layer: LayerTarget) => void;
+  selectedLayer?: LayerTarget; onSelectLayer: (layer: LayerTarget) => void;
   disabled: boolean; draggingStyle: boolean; bitmapAsset?: { name: string; width: number; height: number };
+  bitmapSelected: boolean; textSelected: boolean; textTarget: 'titleDesign' | 'artistDesign'; onEditText: (target: 'titleDesign' | 'artistDesign') => void;
   bitmapBusy: boolean; onChooseBitmap: () => void; onEditBitmap: () => void; onRemoveBitmap: () => void;
 }) {
-  const overlayEnabled = settings.overlay.style !== 'none';
   const updateOverlay = <K extends keyof VisualSettings['overlay']>(key: K, value: VisualSettings['overlay'][K]) =>
     onChange(current => ({ ...current, overlay: { ...current.overlay, [key]: value } }));
   const imageLocked = disabled || bitmapBusy;
   return <section className="layer-toolbar" aria-label="レイヤー合成">
-    <div className="header-layer-card header-bitmap-card">
+    <label className="header-layer-card shared-background"><span>背景色</span><input type="color" aria-label="背景色" disabled={disabled} value={settings.backgroundColor} onChange={e => onChange(s => ({ ...s, backgroundColor: e.target.value }))} /></label>
+    <div className={`header-layer-card header-bitmap-card ${bitmapSelected ? 'selected' : ''}`} onClick={() => { if (!disabled) onEditBitmap(); }}>
       <div className="header-layer-top"><span className="layer-number">00</span>
-        <button className="header-bitmap-edit" aria-label="背景ビットマップを編集" disabled={disabled} onClick={onEditBitmap}
+        <button className="header-bitmap-edit" aria-label="背景ビットマップを編集" aria-pressed={bitmapSelected} disabled={disabled} onClick={onEditBitmap}
           title={bitmapAsset ? `${bitmapAsset.name} · ${bitmapAsset.width} × ${bitmapAsset.height} px` : '背景ビットマップを編集'}>
           <strong>背景ビットマップ</strong><small>{bitmapBusy ? '読み込み中…' : bitmapAsset?.name || '画像なし'}</small>
         </button>
@@ -88,12 +89,8 @@ export function LayerToolbar({ settings, onChange, selectedLayer, onSelectLayer,
     <LayerCard slot="02" selected={selectedLayer === 'overlay'} style={settings.overlay.style} controls={settings.overlay} disabled={disabled} draggingStyle={draggingStyle}
       onSelect={() => onSelectLayer('overlay')} onStyle={style => updateOverlay('style', style)}
       onColors={colors => onChange(current => ({ ...current, overlay: { ...current.overlay, ...colors } }))} />
-    <fieldset className="header-layer-card header-composite-controls" aria-label="レイヤー02の合成設定" disabled={disabled || !overlayEnabled}>
-      <label className="header-blend-control"><span>合成方法</span><select aria-label="合成方法" value={settings.overlay.blend}
-        onChange={event => updateOverlay('blend', event.target.value as VisualSettings['overlay']['blend'])}>
-        <option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option>
-      </select></label>
-      <Slider label="レイヤーの不透明度" value={settings.overlay.opacity} min={0} max={1} onChange={value => updateOverlay('opacity', value)} />
-    </fieldset>
+    <div className={`header-layer-card header-text-card ${textSelected ? 'selected' : ''}`} onClick={e => { if (!disabled && !(e.target as HTMLElement).closest('button')) onEditText(textTarget); }}>
+      <strong>03 テキスト</strong><div><button disabled={disabled} aria-label="タイトルを編集" aria-pressed={textSelected && textTarget === 'titleDesign'} onClick={() => onEditText('titleDesign')}>タイトル</button><button disabled={disabled} aria-label="アーティストを編集" aria-pressed={textSelected && textTarget === 'artistDesign'} onClick={() => onEditText('artistDesign')}>アーティスト</button></div>
+    </div>
   </section>;
 }

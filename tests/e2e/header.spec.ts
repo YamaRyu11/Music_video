@@ -1,111 +1,77 @@
-import { test, expect, type Page } from '@playwright/test';
-
-const composition = (page: Page) => page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true });
-const tabs = ['カラー・動き', '背景ビットマップ', 'テキスト'];
-async function fits(page: Page) {
-  const overflow = await page.evaluate(() => {
-    const e = document.scrollingElement!;
-    return [e.scrollWidth - e.clientWidth, e.scrollHeight - e.clientHeight, scrollX, scrollY];
-  });
-  expect(overflow).toEqual([0, 0, 0, 0]);
-  await expect(composition(page)).toBeInViewport({ ratio: 1 });
-  await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
-}
+import { test, expect } from '@playwright/test';
+import { openInspector } from './inspector';
 
 for (const viewport of [{ width: 900, height: 640 }, { width: 1440, height: 900 }]) {
-  test(`composition remains in the header across every editor tab at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+  test(`cards drive one inspector without tabs at ${viewport.width}`, async ({ page }) => {
     await page.setViewportSize(viewport); await page.goto('/');
-    const header = composition(page);
-    for (const aspect of ['landscape', 'portrait']) {
-      await page.getByRole('button', { name: aspect === 'portrait' ? '縦 9:16' : '横 16:9', exact: true }).click();
-      if (viewport.width === 900 && aspect === 'landscape') {
-        await page.getByLabel('音源ファイル', { exact: true }).setInputFiles({ name: 'invalid.txt', mimeType: 'text/plain', buffer: Buffer.from('not audio') });
-        await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(page.getByRole('tab')).toHaveCount(0);
+    const bg = page.getByLabel('背景色', { exact: true });
+    await expect(bg).toHaveCount(1);
+    const bgBox = (await bg.boundingBox())!, bitmapBox = (await page.getByRole('button', { name: '背景ビットマップを編集' }).boundingBox())!;
+    expect(bgBox.x).toBeLessThan(bitmapBox.x);
+    await bg.fill('#253647');
+    for (const aspect of ['横 16:9', '縦 9:16']) {
+      await page.getByRole('button', { name: aspect, exact: true }).click();
+      await openInspector(page, '背景ビットマップ');
+      await expect(page.getByRole('button', { name: '背景ビットマップを編集' })).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByRole('region', { name: '背景ビットマップの設定', exact: true })).toBeVisible();
+      for (const number of ['01', '02']) {
+        await page.getByRole('button', { name: `レイヤー${number}を編集`, exact: true }).click();
+        await expect(page.getByRole('region', { name: 'カラー・動きの設定', exact: true })).toBeVisible();
+        await expect(page.getByRole('combobox', { name: '合成方法', exact: true })).toHaveCount(1);
+        await expect(page.getByRole('banner').getByRole('combobox', { name: '合成方法' })).toHaveCount(0);
       }
-      for (const name of tabs) {
-        await page.getByRole('tab', { name, exact: true }).click();
-        if (viewport.width === 900 && aspect === 'landscape' && name === '背景ビットマップ') {
-          await page.getByLabel('背景画像ファイル', { exact: true }).setInputFiles({ name: 'invalid.png', mimeType: 'image/png', buffer: Buffer.from('not an image') });
-          await expect(page.getByRole('alert').first()).toBeVisible();
-        }
-        await expect(header.getByRole('button', { name: '背景ビットマップを編集', exact: true })).toBeInViewport({ ratio: 1 });
-        await expect(header.getByRole('button', { name: 'レイヤー01を編集', exact: true })).toBeInViewport({ ratio: 1 });
-        await expect(header.getByRole('button', { name: 'レイヤー02を編集', exact: true })).toBeInViewport({ ratio: 1 });
-        await expect(header.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toBeVisible();
-        await expect(header.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toBeVisible();
-        await expect(header.getByRole('combobox', { name: '合成方法', exact: true })).toBeVisible();
-        await expect(header.getByRole('slider', { name: 'レイヤーの不透明度', exact: true })).toBeVisible();
-        await expect(page.getByRole('tab', { name: 'レイヤー合成', exact: true })).toHaveCount(0);
-        await expect(page.getByRole('tab', { name: 'スタイル合成', exact: true })).toHaveCount(0);
-        await expect(page.getByLabel('レイヤーの色', { exact: true })).toHaveCount(0);
-        const box = (await page.locator('.preview-stage canvas').boundingBox())!;
-        expect(box.width).toBeGreaterThan(30); expect(box.height).toBeGreaterThan(30);
-        expect(box.width / box.height).toBeCloseTo(aspect === 'portrait' ? 9 / 16 : 16 / 9, 2);
-        await fits(page);
-      }
+      await page.getByRole('button', { name: 'タイトルを編集', exact: true }).click();
+      await expect(page.getByRole('region', { name: 'テキストの設定', exact: true })).toBeVisible();
+      await expect(bg).toHaveValue('#253647');
+      await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
+      expect(await page.evaluate(() => { const e = document.scrollingElement!; return [e.scrollWidth-e.clientWidth,e.scrollHeight-e.clientHeight]; })).toEqual([0,0]);
+      const c = (await page.locator('canvas').boundingBox())!;
+      expect(c.width/c.height).toBeCloseTo(aspect.startsWith('縦') ? 9/16 : 16/9,2);
     }
   });
 }
 
-test('header colors and selected-layer colors edit the same values without ambiguous labels', async ({ page }) => {
+test('base and overlay blend and opacity are independent and base can expose the bitmap', async ({ page }) => {
   await page.goto('/');
-  const header = composition(page);
-  for (const layer of ['01', '02']) for (const color of ['メインカラー', 'サブカラー']) {
-    await expect(page.getByLabel(`レイヤー${layer}の${color}`, { exact: true })).toHaveCount(1);
-  }
-  const main1 = header.getByLabel('レイヤー01のメインカラー', { exact: true });
-  const sub1 = header.getByLabel('レイヤー01のサブカラー', { exact: true });
-  const main2 = header.getByLabel('レイヤー02のメインカラー', { exact: true });
-  const sub2 = header.getByLabel('レイヤー02のサブカラー', { exact: true });
-  const baseColors = [await main1.inputValue(), await sub1.inputValue()];
-  await header.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption('wave');
-  await header.getByRole('button', { name: 'レイヤー02を編集', exact: true }).click();
-  await main2.fill('#ee2244');
-  await expect(page.getByLabel('カスタムカラー', { exact: true })).toHaveValue('#ee2244');
-  await page.getByLabel('カスタムカラー', { exact: true }).fill('#22cc88');
-  await expect(main2).toHaveValue('#22cc88');
-  await sub2.fill('#3377aa');
-  await expect(page.getByLabel('サブカラー', { exact: true })).toHaveValue('#3377aa');
-  await page.getByLabel('サブカラー', { exact: true }).fill('#abcdef');
-  await expect(sub2).toHaveValue('#abcdef');
-  expect([await main1.inputValue(), await sub1.inputValue()]).toEqual(baseColors);
-  await header.getByRole('button', { name: 'レイヤー01を編集', exact: true }).click();
-  await expect(page.getByLabel('カスタムカラー', { exact: true })).toHaveValue(baseColors[0]);
-  await expect(page.getByLabel('サブカラー', { exact: true })).toHaveValue(baseColors[1]);
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
-  await main2.fill('#aa33ff');
-  await expect(page.getByRole('tab', { name: 'テキスト', exact: true })).toHaveAttribute('aria-selected', 'true');
-  await header.getByRole('button', { name: 'レイヤー02を編集', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'テキスト', exact: true })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('tab', { name: 'カラー・動き', exact: true }).click();
-  await expect(page.getByLabel('カスタムカラー', { exact: true })).toHaveValue('#aa33ff');
-  await expect(page.getByLabel('サブカラー', { exact: true })).toHaveValue('#abcdef');
+  await page.getByLabel('背景色', { exact: true }).fill('#45789a');
+  await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('0.35');
+  await page.getByRole('combobox', { name: '合成方法', exact: true }).selectOption('multiply');
+  await page.getByRole('button', { name: 'レイヤー02を編集', exact: true }).click();
+  await page.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption('wave');
+  await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('0.8');
+  await page.getByRole('combobox', { name: '合成方法', exact: true }).selectOption('lighter');
+  await page.getByRole('button', { name: 'レイヤー01を編集', exact: true }).click();
+  await expect(page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true })).toHaveValue('0.35');
+  await expect(page.getByRole('combobox', { name: '合成方法', exact: true })).toHaveValue('multiply');
+  const data = await page.evaluate(() => { const c = document.createElement('canvas'); c.width=160;c.height=90; const x=c.getContext('2d')!;x.fillStyle='#c94727';x.fillRect(0,0,160,90);return c.toDataURL().split(',')[1]; });
+  await page.getByLabel('背景画像ファイル', { exact: true }).setInputFiles({name:'red.png',mimeType:'image/png',buffer:Buffer.from(data,'base64')});
+  await page.getByRole('button', { name: 'レイヤー02を編集', exact: true }).click();
+  await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('0');
+  await page.getByRole('button', { name: 'レイヤー01を編集', exact: true }).click();
+  const pixels = async () => { await page.evaluate(()=>new Promise<void>(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r()))));return page.locator('canvas').evaluate(c=>(c as HTMLCanvasElement).toDataURL()); };
+  await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('0');
+  const plain = await pixels();
+  const corner = await page.locator('canvas').evaluate(c=>Array.from((c as HTMLCanvasElement).getContext('2d')!.getImageData(0,0,1,1).data));
+  expect(corner).toEqual([201,71,39,255]);
+  await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('1');
+  await page.getByRole('combobox', { name: '合成方法', exact: true }).selectOption('source-over'); const normal=await pixels(); expect(normal).not.toBe(plain);
+  await page.getByRole('combobox', { name: '合成方法', exact: true }).selectOption('screen'); expect(await pixels()).not.toBe(normal);
 });
 
-test('header background editing and picking share one bitmap while style drops keep the current tab', async ({ page }) => {
-  await page.setViewportSize({ width: 900, height: 640 }); await page.goto('/');
-  const header = composition(page);
-  await header.getByRole('button', { name: '背景ビットマップを編集', exact: true }).click();
-  await expect(page.getByRole('tab', { name: '背景ビットマップ', exact: true })).toHaveAttribute('aria-selected', 'true');
-  const encoded = await page.evaluate(() => {
-    const c = document.createElement('canvas'); c.width = 32; c.height = 24;
-    const ctx = c.getContext('2d')!; ctx.fillStyle = '#5577bb'; ctx.fillRect(0, 0, 32, 24);
-    return c.toDataURL().split(',')[1];
-  });
-  await expect(page.getByRole('button', { name: '背景画像を追加・変更', exact: true })).toHaveCount(1);
-  await expect(page.getByLabel('背景画像ファイル', { exact: true })).toHaveCount(1);
-  const chosen = page.waitForEvent('filechooser');
-  await header.getByRole('button', { name: '背景画像を追加・変更', exact: true }).click();
-  await (await chosen).setFiles({ name: 'header-background.png', mimeType: 'image/png', buffer: Buffer.from(encoded, 'base64') });
-  await expect(page.locator('.bitmap-source-info strong')).toHaveText('header-background.png');
-  await page.locator('.sidebar .style-card').filter({ hasText: 'Silk Wave' }).dragTo(header.locator('[data-layer-slot="02"]'));
-  await expect(page.getByRole('tab', { name: '背景ビットマップ', exact: true })).toHaveAttribute('aria-selected', 'true');
-  await expect(header.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('wave');
-  await expect(header.getByRole('button', { name: 'レイヤー02を編集', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' }).dragTo(header.locator('[data-layer-slot="01"]'));
-  await expect(page.getByRole('tab', { name: '背景ビットマップ', exact: true })).toHaveAttribute('aria-selected', 'true');
-  await expect(header.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('tunnel');
-  await expect(header.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('wave');
-  await expect(page.locator('.bitmap-source-info strong')).toHaveText('header-background.png');
-  await fits(page);
+test('clicking visible preview text selects its inspector at either aspect', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'タイトルを編集', exact: true }).click();
+  await page.getByPlaceholder('曲名を入力（任意）').fill('CLICK TITLE');
+  await page.getByPlaceholder('アーティスト名を入力（任意）').fill('CLICK ARTIST');
+  for (const aspect of ['横 16:9','縦 9:16']) {
+    await page.getByRole('button', { name: aspect, exact: true }).click();
+    for (const [target,y] of [['タイトル',.79],['アーティスト',.835]] as const) {
+      await page.getByRole('button', { name: 'レイヤー01を編集', exact: true }).click();
+      const box=(await page.locator('canvas').boundingBox())!;
+      await page.mouse.click(box.x+box.width*.5,box.y+box.height*y);
+      await expect(page.getByRole('region', { name:'テキストの設定',exact:true })).toBeVisible();
+      await expect(page.getByRole('button', { name:`${target}を編集`,exact:true })).toHaveAttribute('aria-pressed','true');
+    }
+  }
 });

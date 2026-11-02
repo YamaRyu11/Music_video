@@ -1,7 +1,7 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
-import { Bold, Check, Image, Italic, Palette, RotateCcw, Settings2, Type } from 'lucide-react';
+import { type Dispatch, type SetStateAction } from 'react';
+import { Bold, Check, Italic, RotateCcw, Settings2 } from 'lucide-react';
 import { defaultBitmapSettings, defaultLayerControls, defaultSettings, MAX_INTENSITY, MAX_SMOOTHING,
-  type LayerControls, type LayerTarget, type TextDesign, type VisualSettings } from '../shared';
+  type LayerControls, type LayerTarget, type TextDesign, type TextTarget, type VisualSettings } from '../shared';
 import { lineWidthHelp, styles, supportsLineWidth } from '../visuals/catalog';
 import { Slider } from './Slider';
 import { BitmapPanel } from './BitmapPanel';
@@ -19,12 +19,11 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
 
 export type CustomizerTab = 'color' | 'bitmap' | 'text';
 
-export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, onTabChange: setTab, disabled, bitmapAsset, bitmapBusy, onChooseBitmap, onRemoveBitmap }: {
+export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, textTarget: target, disabled, bitmapAsset, bitmapBusy, onChooseBitmap, onRemoveBitmap }: {
   settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>; selectedLayer: LayerTarget;
-  activeTab: CustomizerTab; onTabChange: (tab: CustomizerTab) => void; disabled: boolean;
+  activeTab: CustomizerTab; textTarget: TextTarget; disabled: boolean;
   bitmapAsset?: { name: string; width: number; height: number }; bitmapBusy: boolean; onChooseBitmap: () => void; onRemoveBitmap: () => void;
 }) {
-  const [target, setTarget] = useState<'titleDesign' | 'artistDesign'>('titleDesign');
   const update = <K extends keyof VisualSettings>(key: K, value: VisualSettings[K]) => onChange(s => ({ ...s, [key]: value }));
   const updateControls = (values: Partial<LayerControls>) => onChange(s => selectedLayer === 'base'
     ? { ...s, ...values } : { ...s, overlay: { ...s.overlay, ...values } });
@@ -47,25 +46,19 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
   };
 
   return <section className="adjust-panel">
-    <div className="panel-title"><h2><Settings2 size={16} />映像をカスタマイズ</h2><button className="reset-button" disabled={disabled} aria-label="カスタマイズをリセット"
+    <div className="panel-title"><h2><Settings2 size={16} />{tab === 'bitmap' ? '背景ビットマップ' : tab === 'text' ? 'テキスト' : 'カラー・動き'}</h2><button className="reset-button" disabled={disabled} aria-label="カスタマイズをリセット"
       title={editingBitmap ? '背景画像の設定を初期値に戻す' : tab === 'text'
         ? `${target === 'titleDesign' ? 'タイトル' : 'アーティスト'}のデザインを初期値に戻す`
         : `レイヤー${layerNumber}の色・動きを初期値に戻す`} onClick={reset}><RotateCcw size={13} />リセット</button></div>
-    <div className="design-tabs" role="tablist" aria-label="カスタマイズ項目">{[
-      { id: 'color' as const, label: 'カラー・動き', icon: Palette },
-      { id: 'bitmap' as const, label: '背景ビットマップ', icon: Image },
-      { id: 'text' as const, label: 'テキスト', icon: Type },
-    ].map(t => <button key={t.id} role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} onClick={() => setTab(t.id)}><t.icon size={14} />{t.label}</button>)}</div>
-
-    <div key={tab} role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+    <div key={`${tab}-${tab === 'color' ? selectedLayer : target}`} role="region" aria-label={tab === 'bitmap' ? '背景ビットマップの設定' : tab === 'text' ? 'テキストの設定' : 'カラー・動きの設定'} className="inspector-content">
       <fieldset disabled={disabled} className="design-fields">
         {tab === 'color' && <>
           <div className="layer-edit-target"><strong>レイヤー{layerNumber}を編集中</strong><span>{targetStyle?.title ?? 'スタイル未設定'}</span></div>
           <div className="palette-presets">{palettes.map(p => <button key={p.name} className="palette-preset" onClick={() => updateControls({ color: p.primary, secondaryColor: p.secondary })}>
             <span style={{ background: `linear-gradient(120deg, ${p.primary}, ${p.secondary})` }} />{p.name}</button>)}</div>
           <div className="color-control"><label>メインカラー</label><div className="swatches">{colors.map(c => <button key={c} title={c} aria-label={`カラー ${c}`} aria-pressed={controls.color === c} className={`swatch ${controls.color === c ? 'chosen' : ''}`} style={{ backgroundColor: c }} onClick={() => updateControls({ color: c })}>{controls.color === c && <Check size={13} />}</button>)}<label className="custom-color" title="カスタムカラー"><span>＋</span><input aria-label="カスタムカラー" type="color" value={controls.color} onChange={e => updateControls({ color: e.target.value })} /></label></div></div>
-          <div className="design-grid color-detail"><ColorField label="サブカラー" value={controls.secondaryColor} onChange={v => updateControls({ secondaryColor: v })} /><ColorField label="背景色" value={settings.backgroundColor} onChange={v => update('backgroundColor', v)} /></div>
-          <p className="field-note common-background-note">背景色はレイヤー共通です。</p>
+          <div className="design-grid color-detail"><ColorField label="サブカラー" value={controls.secondaryColor} onChange={v => updateControls({ secondaryColor: v })} /></div>
+          <div className="inspector-blend-controls design-grid"><label>合成方法<select aria-label="合成方法" value={controls.blend} onChange={e => updateControls({ blend: e.target.value as LayerControls['blend'] })}><option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option></select></label><Slider label="レイヤーの不透明度" value={controls.opacity} min={0} max={1} onChange={v => updateControls({ opacity: v })} /></div>
           <div className="design-grid three-columns">
             <Slider label="明るさ" value={controls.brightness} min={.5} max={1.5} onChange={v => updateControls({ brightness: v })} />
             <Slider label="彩度" value={controls.saturation} min={0} max={2} onChange={v => updateControls({ saturation: v })} />
@@ -86,7 +79,7 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
 
         {tab === 'text' && <>
           <div className="text-grid text-inputs"><label>タイトル<input placeholder="曲名を入力（任意）" maxLength={100} value={settings.title} onChange={e => update('title', e.target.value)} /></label><label>アーティスト<input placeholder="アーティスト名を入力（任意）" maxLength={100} value={settings.artist} onChange={e => update('artist', e.target.value)} /></label></div>
-          <div className="text-target" aria-label="編集するテキスト"><button aria-label="タイトルを編集" aria-pressed={target === 'titleDesign'} onClick={() => setTarget('titleDesign')}>タイトルのデザイン</button><button aria-label="アーティストを編集" aria-pressed={target === 'artistDesign'} onClick={() => setTarget('artistDesign')}>アーティストのデザイン</button></div>
+          <div className="layer-edit-target"><strong>{target === 'titleDesign' ? 'タイトル' : 'アーティスト'}を編集中</strong></div>
           <div className="design-grid text-design">
             <label>フォント<select aria-label="フォント" value={text.font} onChange={e => updateText('font', e.target.value as TextDesign['font'])}><option value="sans">ゴシック / Segoe UI・游ゴシック</option><option value="serif">明朝 / 游明朝</option><option value="mono">等幅 / Consolas</option><option value="meiryo">メイリオ</option></select></label>
             <ColorField label="文字色" value={text.color} onChange={v => updateText('color', v)} />

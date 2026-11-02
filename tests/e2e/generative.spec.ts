@@ -1,3 +1,4 @@
+import { openInspector } from './inspector';
 import { test, expect, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 
@@ -126,7 +127,7 @@ test('all four generative styles can be searched and assigned to either layer at
   const base = page.getByRole('combobox', { name: 'ベースのスタイル', exact: true });
   const overlay = page.getByRole('combobox', { name: '重ねるスタイル', exact: true });
   await overlay.selectOption(additions[0].id);
-  await page.getByRole('tab', { name: 'カラー・動き', exact: true }).click();
+  await openInspector(page, 'カラー・動き');
   await page.getByRole('slider', { name: '音への反応', exact: true }).fill('10');
   await page.getByRole('slider', { name: '動きの滑らかさ', exact: true }).fill('2');
   await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();

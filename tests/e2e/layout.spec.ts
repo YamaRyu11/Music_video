@@ -1,3 +1,4 @@
+import { openInspector } from './inspector';
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -39,7 +40,7 @@ for (const viewport of [{ width: 900, height: 640 }, { width: 900, height: 740 }
       }
 
       for (const name of ['カラー・動き', '背景ビットマップ', 'テキスト']) {
-        await page.getByRole('tab', { name, exact: true }).click();
+        await openInspector(page, name);
         await expectDocumentFits(page);
         await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
         await expect(canvas).toBeInViewport({ ratio: 1 });
@@ -81,10 +82,10 @@ test('style cards can be dropped independently into both composition slots', asy
   await expectDocumentFits(page);
 });
 
-test('dragging from the text settings preserves the tab while setting the header overlay', async ({ page }) => {
+test('dropping a style selects the color inspector and the destination layer', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   const source = page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' });
   await source.scrollIntoViewIfNeeded();
   const from = await source.boundingBox();
@@ -100,7 +101,7 @@ test('dragging from the text settings preserves the tab while setting the header
   await page.mouse.down();
   try {
     await page.mouse.move(from!.x + from!.width / 2 + 20, from!.y + from!.height / 2 + 15, { steps: 5 });
-    await expect(page.getByRole('tab', { name: 'テキスト', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('region', { name: 'テキストの設定', exact: true })).toBeVisible();
     const to = await page.locator('[data-layer-slot="02"]').boundingBox();
     expect(to).not.toBeNull();
     await page.mouse.move(to!.x + to!.width / 2, to!.y + to!.height / 2, { steps: 10 });
@@ -109,7 +110,7 @@ test('dragging from the text settings preserves the tab while setting the header
   } finally { await page.mouse.up(); }
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('orbit');
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('tunnel');
-  await expect(page.getByRole('tab', { name: 'テキスト', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('region', { name: 'カラー・動きの設定', exact: true })).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { audioDragOverlays: boolean[] }).audioDragOverlays)).toEqual([]);
   await expect(page.locator('.drag-overlay')).toHaveCount(0);
 });
@@ -125,7 +126,7 @@ test('Escape cancels a style drag and clears the drop target highlight', async (
   await page.mouse.down();
   try {
     await page.mouse.move(from!.x + from!.width / 2 + 20, from!.y + from!.height / 2 + 15, { steps: 5 });
-    await expect(page.getByRole('tab', { name: 'カラー・動き', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('region', { name: 'カラー・動きの設定', exact: true })).toBeVisible();
     const target = page.locator('[data-layer-slot="02"]');
     const to = await target.boundingBox();
     expect(to).not.toBeNull();
@@ -137,7 +138,7 @@ test('Escape cancels a style drag and clears the drop target highlight', async (
   await expect(page.locator('.drop-target')).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('orbit');
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('none');
-  await expect(page.getByRole('tab', { name: 'カラー・動き', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('region', { name: 'カラー・動きの設定', exact: true })).toBeVisible();
   await expect(page.locator('.drag-overlay')).toHaveCount(0);
 });
 

@@ -1,3 +1,4 @@
+import { openInspector } from './inspector.mjs';
 import { _electron as electron, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -27,7 +28,7 @@ try {
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('particles');
   await page.getByRole('slider', { name: 'レイヤーの不透明度' }).fill('0.6');
   await page.getByLabel('レイヤー02のメインカラー', { exact: true }).fill('#79acff');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('曲名を入力（任意）').fill('TEST TYPOGRAPHY');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('テストアーティスト');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('90');
@@ -52,7 +53,7 @@ try {
       await page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' }).dragTo(page.locator('[data-layer-slot="01"]'));
       await page.locator('.sidebar .style-card').filter({ hasText: 'Silk Wave' }).dragTo(page.locator('[data-layer-slot="02"]'));
       await page.getByRole('combobox', { name: '合成方法' }).selectOption('lighter');
-      await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+      await openInspector(page, 'テキスト');
       // Importing a new audio source replaces its title, but retains the typography.
       await page.getByPlaceholder('曲名を入力（任意）').fill('TEST TYPOGRAPHY');
     }
