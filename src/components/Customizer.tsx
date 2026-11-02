@@ -1,10 +1,8 @@
-import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { Bold, Check, Image, Italic, Layers2, Palette, RotateCcw, Settings2, Type } from 'lucide-react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { Bold, Check, Image, Italic, Palette, RotateCcw, Settings2, Type } from 'lucide-react';
 import { defaultBitmapSettings, defaultLayerControls, defaultSettings, MAX_INTENSITY, MAX_SMOOTHING,
   type LayerControls, type LayerTarget, type TextDesign, type VisualSettings } from '../shared';
 import { lineWidthHelp, styles, supportsLineWidth } from '../visuals/catalog';
-import { droppedStyle, isStyleDrag } from '../visuals/style-drag';
-import type { StyleId } from '../shared';
 import { Slider } from './Slider';
 import { BitmapPanel } from './BitmapPanel';
 
@@ -19,50 +17,24 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   return <label className="color-field"><span>{label}</span><span className="color-field-value"><input type="color" aria-label={label} value={value} onChange={e => onChange(e.target.value)} /><code>{value.toUpperCase()}</code></span></label>;
 }
 
-function LayerSlot({ slot, selected, disabled, draggingStyle, onSelect, onStyle, children }: {
-  slot: '01' | '02'; selected: boolean; disabled: boolean; draggingStyle: boolean;
-  onSelect: () => void; onStyle: (style: StyleId) => void; children: ReactNode;
-}) {
-  const [hover, setHover] = useState(false);
-  useEffect(() => { if (!draggingStyle || disabled) setHover(false); }, [draggingStyle, disabled]);
-  return <div data-layer-slot={slot} role="group" aria-label={`レイヤー ${slot}`}
-    className={`layer-order ${selected ? 'selected' : ''} ${hover ? 'drop-target' : ''}`}
-    onClick={() => { if (!disabled) onSelect(); }} onDragOver={e => {
-      if (disabled || !isStyleDrag(e.dataTransfer)) return;
-      e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'copy'; setHover(true);
-    }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHover(false); }}
-    onDrop={e => {
-      setHover(false); if (!isStyleDrag(e.dataTransfer)) return;
-      e.preventDefault(); e.stopPropagation(); if (disabled) return;
-      const style = droppedStyle(e.dataTransfer); if (style) { onSelect(); onStyle(style); }
-    }}>
-    <button className="layer-edit-button" disabled={disabled} aria-label={`レイヤー${slot}を編集`} aria-pressed={selected} onClick={e => { e.stopPropagation(); onSelect(); }}>
-      <span className="layer-number">{slot}</span><span>{selected ? '編集中' : '編集'}</span>
-    </button><div className="layer-slot-content">{children}<small>左のスタイルをここへドロップ</small></div>
-  </div>;
-}
+export type CustomizerTab = 'color' | 'bitmap' | 'text';
 
-export function Customizer({ settings, onChange, selectedLayer, onSelectLayer, disabled, draggingStyle = false, bitmapAsset, bitmapBusy, onChooseBitmap, onRemoveBitmap }: {
+export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, onTabChange: setTab, disabled, bitmapAsset, bitmapBusy, onChooseBitmap, onRemoveBitmap }: {
   settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>; selectedLayer: LayerTarget;
-  onSelectLayer: (layer: LayerTarget) => void; disabled: boolean; draggingStyle?: boolean;
+  activeTab: CustomizerTab; onTabChange: (tab: CustomizerTab) => void; disabled: boolean;
   bitmapAsset?: { name: string; width: number; height: number }; bitmapBusy: boolean; onChooseBitmap: () => void; onRemoveBitmap: () => void;
 }) {
-  const [tab, setTab] = useState<'color' | 'layers' | 'text'>('color');
-  const [layerPage, setLayerPage] = useState<'styles' | 'bitmap'>('styles');
   const [target, setTarget] = useState<'titleDesign' | 'artistDesign'>('titleDesign');
-  useEffect(() => { if (draggingStyle) { setTab('layers'); setLayerPage('styles'); } }, [draggingStyle]);
   const update = <K extends keyof VisualSettings>(key: K, value: VisualSettings[K]) => onChange(s => ({ ...s, [key]: value }));
-  const updateLayer = <K extends keyof VisualSettings['overlay']>(key: K, value: VisualSettings['overlay'][K]) => onChange(s => ({ ...s, overlay: { ...s.overlay, [key]: value } }));
   const updateControls = (values: Partial<LayerControls>) => onChange(s => selectedLayer === 'base'
     ? { ...s, ...values } : { ...s, overlay: { ...s.overlay, ...values } });
   const updateText = <K extends keyof TextDesign>(key: K, value: TextDesign[K]) => onChange(s => ({ ...s, [target]: { ...s[target], [key]: value } }));
   const text = settings[target];
-  const layerEnabled = settings.overlay.style !== 'none';
   const controls = selectedLayer === 'base' ? settings : settings.overlay;
   const layerNumber = selectedLayer === 'base' ? '01' : '02';
   const targetStyle = styles.find(s => s.id === controls.style);
   const lineWidthEnabled = supportsLineWidth(controls.style);
-  const editingBitmap = tab === 'layers' && layerPage === 'bitmap';
+  const editingBitmap = tab === 'bitmap';
   const reset = () => {
     if (editingBitmap) update('bitmap', { ...defaultBitmapSettings, crop: { ...defaultBitmapSettings.crop } });
     else if (tab === 'text') update(target, { ...defaultSettings[target] });
@@ -81,11 +53,11 @@ export function Customizer({ settings, onChange, selectedLayer, onSelectLayer, d
         : `レイヤー${layerNumber}の色・動きを初期値に戻す`} onClick={reset}><RotateCcw size={13} />リセット</button></div>
     <div className="design-tabs" role="tablist" aria-label="カスタマイズ項目">{[
       { id: 'color' as const, label: 'カラー・動き', icon: Palette },
-      { id: 'layers' as const, label: 'レイヤー合成', icon: Layers2 },
+      { id: 'bitmap' as const, label: '背景ビットマップ', icon: Image },
       { id: 'text' as const, label: 'テキスト', icon: Type },
     ].map(t => <button key={t.id} role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} onClick={() => setTab(t.id)}><t.icon size={14} />{t.label}</button>)}</div>
 
-    <div key={`${tab}-${tab === 'layers' ? layerPage : ''}`} role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+    <div key={tab} role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
       <fieldset disabled={disabled} className="design-fields">
         {tab === 'color' && <>
           <div className="layer-edit-target"><strong>レイヤー{layerNumber}を編集中</strong><span>{targetStyle?.title ?? 'スタイル未設定'}</span></div>
@@ -109,23 +81,8 @@ export function Customizer({ settings, onChange, selectedLayer, onSelectLayer, d
           <p className="field-note">Shiftを押しながらドラッグすると、細かく調整できます。</p>
         </>}
 
-        {tab === 'layers' && <>
-          <div className="layer-subtabs" role="tablist" aria-label="レイヤーの種類">
-            <button role="tab" aria-selected={layerPage === 'styles'} onClick={() => setLayerPage('styles')}>スタイル合成</button>
-            <button role="tab" aria-selected={layerPage === 'bitmap'} onClick={() => setLayerPage('bitmap')}>背景ビットマップ</button>
-          </div>
-          {layerPage === 'bitmap' ? <BitmapPanel settings={settings.bitmap} onChange={value => update('bitmap', value)}
-            asset={bitmapAsset} busy={bitmapBusy} disabled={disabled} onChoose={onChooseBitmap} onRemove={onRemoveBitmap} /> : <>
-          <button className="bitmap-layer-summary" onClick={() => setLayerPage('bitmap')}><span className="layer-number">00</span><Image size={15} /><span><strong>背景ビットマップ</strong><small>{bitmapAsset?.name || '画像を追加して背景に配置'}</small></span></button>
-          <LayerSlot slot="01" selected={selectedLayer === 'base'} disabled={disabled} draggingStyle={draggingStyle} onSelect={() => onSelectLayer('base')} onStyle={style => update('style', style)}><label>ベース映像<select aria-label="ベースのスタイル" value={settings.style} onChange={e => { onSelectLayer('base'); update('style', e.target.value as StyleId); }}>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></LayerSlot>
-          <LayerSlot slot="02" selected={selectedLayer === 'overlay'} disabled={disabled} draggingStyle={draggingStyle} onSelect={() => onSelectLayer('overlay')} onStyle={style => updateLayer('style', style)}><label>重ねるスタイル<select aria-label="重ねるスタイル" value={settings.overlay.style} onChange={e => { onSelectLayer('overlay'); updateLayer('style', e.target.value as VisualSettings['overlay']['style']); }}><option value="none">なし（合成しない）</option>{styles.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></LayerSlot>
-          <fieldset disabled={!layerEnabled} className="design-grid overlay-options">
-            <ColorField label="レイヤーの色" value={settings.overlay.color} onChange={v => updateLayer('color', v)} />
-            <label>合成方法<select aria-label="合成方法" value={settings.overlay.blend} onChange={e => updateLayer('blend', e.target.value as VisualSettings['overlay']['blend'])}><option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option></select></label>
-            <div className="full-row"><Slider label="レイヤーの不透明度" value={settings.overlay.opacity} min={0} max={1} onChange={v => updateLayer('opacity', v)} /><p className="field-note">0%で非表示、100%ではっきり重なります。テキストは合成後に表示されます。</p></div>
-          </fieldset>
-          </>}
-        </>}
+        {tab === 'bitmap' && <BitmapPanel settings={settings.bitmap} onChange={value => update('bitmap', value)}
+          asset={bitmapAsset} busy={bitmapBusy} disabled={disabled} onChoose={onChooseBitmap} onRemove={onRemoveBitmap} />}
 
         {tab === 'text' && <>
           <div className="text-grid text-inputs"><label>タイトル<input placeholder="曲名を入力（任意）" maxLength={100} value={settings.title} onChange={e => update('title', e.target.value)} /></label><label>アーティスト<input placeholder="アーティスト名を入力（任意）" maxLength={100} value={settings.artist} onChange={e => update('artist', e.target.value)} /></label></div>

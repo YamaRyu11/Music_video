@@ -93,7 +93,7 @@ test('the typography library entry can be dragged into either layer and every ne
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 900, height: 640 });
   await page.goto('/');
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   const base = page.getByRole('combobox', { name: 'ベースのスタイル', exact: true });
   const overlay = page.getByRole('combobox', { name: '重ねるスタイル', exact: true });
   const baseIds = await base.locator('option').evaluateAll(options => options.map(o => (o as HTMLOptionElement).value));

@@ -5,6 +5,7 @@ import { startRenderWorker } from './render-worker';
 import './styles.css';
 import './workspace.css';
 import './bitmap-panel.css';
+import './layer-toolbar.css';
 
 if (new URLSearchParams(location.search).has('render')) startRenderWorker();
 else createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

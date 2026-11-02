@@ -31,8 +31,8 @@ const sliders = { brightness: '明るさ', saturation: '彩度', glow: '光の�
   smoothing: '動きの滑らかさ', lineWidth: '線の太さ' };
 
 async function stylesPanel() {
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
-  await page.getByRole('tab', { name: 'スタイル合成', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'レイヤー合成', exact: true })).toHaveCount(0);
 }
 async function editLayer(number) {
   await stylesPanel();
@@ -161,9 +161,19 @@ try {
     const begun = Date.now();
     await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
     await page.locator('.export-button').click();
+    const mixHeader = page.getByRole('region', { name: 'レイヤー合成', exact: true });
+    await expect(mixHeader).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('button', { name: 'レイヤー01を編集', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'レイヤー02を編集', exact: true })).toBeDisabled();
+    await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toBeDisabled();
+    await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toBeDisabled();
+    await expect(page.getByRole('combobox', { name: '合成方法', exact: true })).toBeDisabled();
+    await expect(page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true })).toBeDisabled();
     await page.waitForFunction(() => window.layerExportEvents.some(event => ['complete', 'error', 'cancelled'].includes(event.state)), undefined, { timeout: 180_000 });
     const event = await page.evaluate(() => window.layerExportEvents.findLast(value => ['complete', 'error', 'cancelled'].includes(value.state)));
     assert.equal(event.state, 'complete', event.message || event.state); assert.equal(event.path, output);
+    await expect(mixHeader).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('button', { name: 'レイヤー02を編集', exact: true })).toBeEnabled();
     const probe = JSON.parse(execFileSync(ffprobe, ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', output], { encoding: 'utf8' }));
     const video = probe.streams.find(stream => stream.codec_type === 'video'), sound = probe.streams.find(stream => stream.codec_type === 'audio');
     assert.ok(video && sound); assert.equal(video.codec_name, 'h264'); assert.equal(sound.codec_name, 'aac');

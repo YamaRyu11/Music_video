@@ -20,13 +20,13 @@ try {
   await expect(page.locator('.drop-zone strong')).toHaveText('demo.wav', { timeout: 30_000 });
   await expect(page.getByRole('button', { name: '動画を書き出す' })).toBeEnabled();
   await page.getByRole('button', { name: 'Ocean', exact: true }).click();
-  await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+  await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.locator('.sidebar .style-card').filter({ hasText: 'Aurora' }).dragTo(page.locator('[data-layer-slot="01"]'));
   await page.locator('.sidebar .style-card').filter({ hasText: 'Particle Flow' }).dragTo(page.locator('[data-layer-slot="02"]'));
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('aurora');
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('particles');
   await page.getByRole('slider', { name: 'レイヤーの不透明度' }).fill('0.6');
-  await page.getByLabel('レイヤーの色', { exact: true }).fill('#79acff');
+  await page.getByLabel('レイヤー02のメインカラー', { exact: true }).fill('#79acff');
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
   await page.getByPlaceholder('曲名を入力（任意）').fill('TEST TYPOGRAPHY');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('テストアーティスト');
@@ -48,7 +48,7 @@ try {
       await page.locator('.drop-zone').click();
       await expect(page.locator('.drop-zone strong')).toHaveText('日本語音源.mp3', { timeout: 30_000 });
       await page.getByRole('button', { name: '縦 9:16' }).click();
-      await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+      await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
       await page.locator('.sidebar .style-card').filter({ hasText: 'Pulse Tunnel' }).dragTo(page.locator('[data-layer-slot="01"]'));
       await page.locator('.sidebar .style-card').filter({ hasText: 'Silk Wave' }).dragTo(page.locator('[data-layer-slot="02"]'));
       await page.getByRole('combobox', { name: '合成方法' }).selectOption('lighter');

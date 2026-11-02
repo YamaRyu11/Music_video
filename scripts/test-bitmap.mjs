@@ -55,8 +55,8 @@ async function previewStats(name) {
 }
 
 async function bitmapPanel() {
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
-  await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
+  await page.getByRole('button', { name: '背景ビットマップを編集', exact: true }).click();
+  await expect(page.getByRole('tab', { name: '背景ビットマップ', exact: true })).toHaveAttribute('aria-selected', 'true');
 }
 
 try {
@@ -92,7 +92,7 @@ try {
   await page.getByRole('slider', { name: '動きの滑らかさ', exact: true }).fill('2');
   await expect(page.getByRole('slider', { name: '音への反応', exact: true })).toHaveValue('10');
   await expect(page.getByRole('slider', { name: '動きの滑らかさ', exact: true })).toHaveValue('2');
-  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.getByRole('combobox', { name: 'ベースのスタイル', exact: true }).selectOption('spectrum');
   await page.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption('none');
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
@@ -154,6 +154,9 @@ try {
     }, output);
     await page.evaluate(() => { window.bitmapExportEvents = []; });
     await page.locator('.export-button').click();
+    await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('button', { name: '背景ビットマップを編集', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '背景画像を追加・変更', exact: true })).toBeDisabled();
     await page.waitForFunction(() => window.bitmapExportEvents.some(event => ['complete', 'error', 'cancelled'].includes(event.state)), undefined, { timeout: 180_000 });
     const result = await page.evaluate(() => window.bitmapExportEvents.findLast(event => ['complete', 'error', 'cancelled'].includes(event.state)));
     assert.equal(result.state, 'complete', result.message || result.state); assert.equal(result.path, output);

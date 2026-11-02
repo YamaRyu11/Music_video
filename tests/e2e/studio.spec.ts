@@ -58,7 +58,7 @@ test('new styles, grading, layer blending and independent typography change the 
   await page.getByRole('slider', { name: '彩度', exact: true }).fill('1');
   expect(Buffer.compare(gray, await image())).not.toBe(0);
   const base = await image();
-  await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.getByRole('combobox', { name: '重ねるスタイル' }).selectOption('spectrum');
   await page.getByRole('slider', { name: 'レイヤーの不透明度' }).fill('0');
   expect(Buffer.compare(base, await image())).toBe(0);
@@ -89,7 +89,7 @@ test('new styles, grading, layer blending and independent typography change the 
   await page.getByRole('checkbox', { name: 'テキストを表示' }).uncheck();
   expect(Buffer.compare(visible, await image())).not.toBe(0);
   await page.getByRole('button', { name: 'カスタマイズをリセット' }).click();
-  await page.getByRole('tab', { name: 'レイヤー合成' }).click();
+  await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: '重ねるスタイル' })).toHaveValue('none');
   await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
   await expect(page.getByRole('slider', { name: '文字サイズ', exact: true })).toHaveValue('42');
