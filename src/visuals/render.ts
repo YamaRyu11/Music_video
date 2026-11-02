@@ -39,7 +39,7 @@ function orbit(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, f
       if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.closePath(); ctx.strokeStyle = alpha(ring === 1 ? s.secondaryColor : s.color, 0.8 - ring * 0.22);
-    ctx.lineWidth = ring ? 1.1 : 2.4;
+    ctx.lineWidth = (ring ? 1.1 : 2.4) * s.lineWidth;
     ctx.shadowColor = s.color; ctx.shadowBlur = (ring ? 6 : 18 + f.attack * 22 * s.intensity) * s.glow * 2; ctx.stroke();
   }
   ctx.shadowBlur = 0;
@@ -47,7 +47,7 @@ function orbit(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, f
     const a = i / 96 * TAU + t * 0.035;
     const inner = r + unit * 0.067;
     const length = unit * (0.004 + f.bands[i % 48] * 0.036 * s.intensity);
-    ctx.strokeStyle = alpha(s.color, 0.18 + f.level * 0.35); ctx.lineWidth = 1.6;
+    ctx.strokeStyle = alpha(s.color, 0.18 + f.level * 0.35); ctx.lineWidth = 1.6 * s.lineWidth;
     ctx.beginPath(); ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
     ctx.lineTo(Math.cos(a) * (inner + length), Math.sin(a) * (inner + length)); ctx.stroke();
   }
@@ -66,7 +66,7 @@ function spectrum(ctx: CanvasRenderingContext2D, w: number, h: number, t: number
     ctx.fillStyle = alpha(s.color, 0.07 + f.attack * 0.1);
     ctx.fillRect(x, baseline + unit * 0.013, bar, size * 0.2);
   }
-  ctx.strokeStyle = alpha(s.color, 0.15); ctx.lineWidth = 1;
+  ctx.strokeStyle = alpha(s.color, 0.15); ctx.lineWidth = s.lineWidth;
   ctx.beginPath(); ctx.moveTo(w * 0.1, baseline); ctx.lineTo(w * 0.9, baseline); ctx.stroke();
 }
 
@@ -82,7 +82,7 @@ function particles(ctx: CanvasRenderingContext2D, w: number, h: number, t: numbe
     ctx.fillStyle = alpha(i % 3 ? s.color : s.secondaryColor, 0.18 + band * 0.7);
     ctx.beginPath(); ctx.arc(x, y, Math.max(0.4, size), 0, TAU); ctx.fill();
     if (i % 3 === 0) {
-      ctx.strokeStyle = alpha(s.color, 0.08 + band * 0.18); ctx.lineWidth = unit / 1080;
+      ctx.strokeStyle = alpha(s.color, 0.08 + band * 0.18); ctx.lineWidth = unit / 1080 * s.lineWidth;
       ctx.beginPath(); ctx.moveTo(x, y);
       ctx.lineTo(x - Math.sin(angle) * (5 + f.level * 16 * s.intensity), y + Math.cos(angle) * 8); ctx.stroke();
     }
@@ -102,7 +102,7 @@ function wave(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, f:
       if (!i) ctx.moveTo(w * 0.08 + u * w * 0.84, y); else ctx.lineTo(w * 0.08 + u * w * 0.84, y);
     }
     ctx.strokeStyle = alpha(layer % 2 ? s.secondaryColor : s.color, 0.25 + (5 - layer) * 0.1);
-    ctx.lineWidth = layer === 0 ? 3 : 1.5; ctx.shadowColor = s.color;
+    ctx.lineWidth = (layer === 0 ? 3 : 1.5) * s.lineWidth; ctx.shadowColor = s.color;
     ctx.shadowBlur = s.glow * (8 + f.attack * 20 * s.intensity); ctx.stroke();
   }
 }
@@ -115,7 +115,7 @@ function tunnel(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, 
     const radius = unit * (0.025 + phase ** 1.8 * 0.43) * (1 + f.bass * 0.1 * s.intensity);
     ctx.save(); ctx.rotate(t * 0.055 + phase * 0.55 + f.attack * 0.08 * s.intensity);
     ctx.strokeStyle = alpha(i % 2 ? s.secondaryColor : s.color, Math.sin(phase * Math.PI) * (0.35 + f.level * 0.4));
-    ctx.lineWidth = 1 + phase * 2; ctx.shadowColor = s.color; ctx.shadowBlur = s.glow * 12;
+    ctx.lineWidth = (1 + phase * 2) * s.lineWidth; ctx.shadowColor = s.color; ctx.shadowBlur = s.glow * 12;
     ctx.beginPath(); ctx.roundRect(-radius, -radius, radius * 2, radius * 2, radius * 0.16); ctx.stroke(); ctx.restore();
   }
 }
@@ -138,7 +138,7 @@ function aurora(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, 
     ctx.fillStyle = gradient; ctx.fill();
     ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
     ctx.strokeStyle = alpha(ribbon % 2 ? s.secondaryColor : s.color, 0.2 + f.treble * 0.3 * s.intensity);
-    ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.lineWidth = 1.5 * s.lineWidth; ctx.stroke();
   }
 }
 
@@ -148,7 +148,7 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
   const gradient = ctx.createLinearGradient(cx - width / 2, 0, cx + width / 2, 0);
   gradient.addColorStop(0, alpha(s.color, 0)); gradient.addColorStop(.25, alpha(s.color, .5));
   gradient.addColorStop(.75, alpha(s.secondaryColor, .5)); gradient.addColorStop(1, alpha(s.secondaryColor, 0));
-  ctx.strokeStyle = gradient; ctx.lineWidth = 1.5;
+  ctx.strokeStyle = gradient; ctx.lineWidth = 1.5 * s.lineWidth;
   for (const side of [-1, 1]) {
     ctx.beginPath(); ctx.moveTo(cx - width / 2, cy + side * opening);
     ctx.lineTo(cx + width / 2, cy + side * opening); ctx.stroke();
@@ -217,7 +217,11 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
     level: 0.35, bass: 0.3, treble: 0.2, attack: 0,
     bands: Array.from({ length: 48 }, (_, i) => 0.15 + Math.sin(i * 0.4) ** 2 * 0.22),
   };
-  // Composite the graphics before grading. Text keeps its independently chosen color.
+  const overlaySettings: VisualSettings = { ...settings, ...settings.overlay,
+    style: settings.overlay.style === 'none' ? settings.style : settings.overlay.style };
+  const overlayFeatures = analysis && settings.overlay.smoothing !== settings.smoothing
+    ? sampleFeatures(analysis, time, settings.overlay.smoothing) : features;
+  // Grade each graphics layer separately; bitmap and text retain their own colors.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
   const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix'];
   const context = trackDrivenStyles.includes(settings.style) || trackDrivenStyles.includes(settings.overlay.style)
@@ -229,15 +233,6 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   const showBitmap = !!bitmap && settings.bitmap.enabled && settings.bitmap.opacity > 0;
   ambient(sceneCtx, w, h, time, features, settings, showBitmap);
   drawStyle(sceneCtx, settings.style, w, h, time, features, settings, context);
-  if (settings.overlay.style !== 'none' && settings.overlay.opacity > 0) {
-    layerCtx.clearRect(0, 0, width, height);
-    layerCtx.save(); layerCtx.scale(width / w, height / h);
-    drawStyle(layerCtx, settings.overlay.style, w, h, time, features, { ...settings, color: settings.overlay.color }, context);
-    layerCtx.restore();
-    sceneCtx.globalCompositeOperation = settings.overlay.blend;
-    sceneCtx.globalAlpha = settings.overlay.opacity;
-    sceneCtx.drawImage(layer, 0, 0, w, h);
-  }
   sceneCtx.restore();
   const grade = `saturate(${settings.saturation}) brightness(${settings.brightness})`;
   ctx.save(); ctx.filter = grade;
@@ -245,6 +240,16 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   if (bitmap) drawBitmap(ctx, width, height, bitmap, settings.bitmap);
   ctx.filter = grade;
   ctx.drawImage(scene, 0, 0); ctx.filter = 'none';
+  if (settings.overlay.style !== 'none' && settings.overlay.opacity > 0) {
+    layerCtx.clearRect(0, 0, width, height);
+    layerCtx.save(); layerCtx.scale(width / w, height / h);
+    drawStyle(layerCtx, settings.overlay.style, w, h, time, overlayFeatures, overlaySettings, context);
+    layerCtx.restore();
+    ctx.save(); ctx.globalCompositeOperation = settings.overlay.blend;
+    ctx.globalAlpha = settings.overlay.opacity;
+    ctx.filter = `saturate(${settings.overlay.saturation}) brightness(${settings.overlay.brightness})`;
+    ctx.drawImage(layer, 0, 0); ctx.restore();
+  }
   ctx.scale(width / w, height / h);
   const motion = { time, features, intensity: settings.intensity, glow: settings.glow };
   const typographyOverlay = settings.overlay.style === 'typography' ? settings.overlay.opacity : 0;
@@ -253,7 +258,8 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   ctx.restore();
   if (typographyOverlay > 0) {
     ctx.save(); ctx.globalAlpha = typographyOverlay; ctx.globalCompositeOperation = settings.overlay.blend;
-    drawText(ctx, settings.title, { ...settings.titleDesign, color: settings.overlay.color }, w, h, motion);
+    drawText(ctx, settings.title, { ...settings.titleDesign, color: settings.overlay.color }, w, h,
+      { time, features: overlayFeatures, intensity: settings.overlay.intensity, glow: settings.overlay.glow });
     ctx.restore();
   }
   drawText(ctx, settings.artist, settings.artistDesign, w, h);

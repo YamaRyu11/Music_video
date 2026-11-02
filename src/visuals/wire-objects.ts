@@ -73,7 +73,7 @@ const tube: StyleRenderer = (ctx, w, h, t, f, s, context) => {
     const entrance = clamp((z - camera.near) / 1.8);
     ctx.strokeStyle = alpha((firstRing + ring) % 4 ? s.color : s.secondaryColor,
       entrance * (0.08 + depth * 0.48 + f.attack * s.intensity * 0.07) * (0.8 + s.glow * 0.4));
-    ctx.lineWidth = unit / 1080 * (0.55 + depth * 1.4);
+    ctx.lineWidth = (unit / 1080 * (0.55 + depth * 1.4)) * s.lineWidth;
     ctx.beginPath();
     for (let sector = 0; sector < sectors; sector++) pathSegment(ctx, points[ring][sector], points[ring][(sector + 1) % sectors], camera);
     ctx.stroke();
@@ -85,7 +85,7 @@ const tube: StyleRenderer = (ctx, w, h, t, f, s, context) => {
       for (let ring = 0; ring < rings - 1; ring++) pathSegment(ctx, points[ring][sector], points[ring + 1][sector], camera);
     }
     ctx.strokeStyle = alpha(band % 2 ? s.secondaryColor : s.color, 0.17 + s.glow * 0.1 + f.treble * s.intensity * 0.08);
-    ctx.lineWidth = unit * 0.0008; ctx.stroke();
+    ctx.lineWidth = (unit * 0.0008) * s.lineWidth; ctx.stroke();
   }
 };
 
@@ -113,7 +113,7 @@ const orb: StyleRenderer = (ctx, w, h, t, f, s, context) => {
     const front = clamp((4.9 - (a.z + b.z) / 2) / 2);
     ctx.strokeStyle = alpha(secondary ? s.secondaryColor : s.color,
       0.08 + front ** 1.5 * (0.46 + f.level * s.intensity * 0.12 + s.glow * 0.1));
-    ctx.lineWidth = unit / 1080 * (0.6 + front * 0.95);
+    ctx.lineWidth = (unit / 1080 * (0.6 + front * 0.95)) * s.lineWidth;
     ctx.beginPath(); if (pathSegment(ctx, a, b, camera)) ctx.stroke();
   };
   for (let latitude = 1; latitude < 12; latitude++) {
@@ -155,12 +155,12 @@ const city: StyleRenderer = (ctx, w, h, t, f, s, context) => {
       if (visibleDepth > far || z + depth - distance < camera.near) continue;
       const fade = clamp(1 - Math.max(camera.near, visibleDepth) / far) ** 1.2;
       ctx.strokeStyle = alpha(lane ? s.secondaryColor : s.color, fade * (0.25 + s.glow * 0.18 + f.level * s.intensity * 0.09));
-      ctx.lineWidth = unit / 1080 * (0.65 + fade * 0.7);
+      ctx.lineWidth = (unit / 1080 * (0.65 + fade * 0.7)) * s.lineWidth;
       ctx.beginPath(); for (const [a, b] of edges) pathSegment(ctx, points[a], points[b], camera); ctx.stroke();
       // A small number of horizontal facade floors adds readable architecture at close range.
       if (visibleDepth < 35) {
         ctx.strokeStyle = alpha(lane ? s.color : s.secondaryColor, fade * 0.13);
-        ctx.lineWidth = unit * 0.0006; ctx.beginPath();
+        ctx.lineWidth = (unit * 0.0006) * s.lineWidth; ctx.beginPath();
         for (let floor = 1; floor <= 3; floor++) {
           const y = height * floor / 4;
           pathSegment(ctx, world(x - width / 2, y, z), world(x + width / 2, y, z), camera);
@@ -169,7 +169,7 @@ const city: StyleRenderer = (ctx, w, h, t, f, s, context) => {
       }
     }
   }
-  ctx.strokeStyle = alpha(s.secondaryColor, 0.27 + s.glow * 0.12); ctx.lineWidth = unit * 0.001;
+  ctx.strokeStyle = alpha(s.secondaryColor, 0.27 + s.glow * 0.12); ctx.lineWidth = (unit * 0.001) * s.lineWidth;
   ctx.beginPath();
   for (const side of [-1, 1]) pathSegment(ctx, world(side * road, 0, distance + camera.near), world(side * road, 0, distance + far), camera);
   ctx.stroke();
@@ -179,7 +179,7 @@ const city: StyleRenderer = (ctx, w, h, t, f, s, context) => {
     const z = mark * 4;
     pathSegment(ctx, world(0, 0, z), world(0, 0, z + 1.6), camera);
   }
-  ctx.strokeStyle = alpha(s.color, 0.16 + f.bass * s.intensity * 0.08); ctx.lineWidth = unit * 0.0013; ctx.stroke();
+  ctx.strokeStyle = alpha(s.color, 0.16 + f.bass * s.intensity * 0.08); ctx.lineWidth = (unit * 0.0013) * s.lineWidth; ctx.stroke();
 };
 
 export const wireObjectRenderers: Pick<Record<StyleId, StyleRenderer>, 'wire-tube' | 'wire-orb' | 'wire-city'> = {

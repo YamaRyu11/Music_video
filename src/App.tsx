@@ -3,7 +3,7 @@ import { ArrowDownToLine, ArrowRight, AudioLines, Check, CheckCircle2, CircleHel
   FileAudio, FolderOpen, HardDrive, Headphones, LoaderCircle, Maximize2, Monitor, Pause, Play,
   Search, Smartphone, Upload, Volume2, X } from 'lucide-react';
 import { defaultSettings, defaultBitmapSettings, dimensions, formatTime, MAX_DURATION, MAX_FILE_BYTES, MAX_BITMAP_BYTES,
-  type Analysis, type AudioAsset, type BitmapAsset, type ExportProgress, type VisualSettings } from './shared';
+  type Analysis, type AudioAsset, type BitmapAsset, type ExportProgress, type LayerTarget, type VisualSettings } from './shared';
 import { renderScene } from './visuals/render';
 import { styles, styleCategories, type StyleCategory } from './visuals/catalog';
 import { Customizer } from './components/Customizer';
@@ -22,6 +22,7 @@ function Waveform({ peaks, progress }: { peaks?: number[]; progress: number }) {
 
 export function App() {
   const [settings, setSettings] = useState<VisualSettings>(defaultSettings);
+  const [selectedLayer, setSelectedLayer] = useState<LayerTarget>('base');
   const [analysis, setAnalysis] = useState<Analysis>();
   const [asset, setAsset] = useState<{ id?: string; name: string; url: string }>();
   const [bitmap, setBitmap] = useState<{ id?: string; name: string; source: DecodedBitmap }>();
@@ -175,6 +176,7 @@ export function App() {
   }
   const duration = analysis?.duration ?? 0;
   const selected = styles.find(s => s.id === settings.style)!;
+  const selectedStyle = selectedLayer === 'base' ? settings.style : settings.overlay.style;
   const visibleStyles = styles.filter(s => (category === 'all' || s.category === category)
     && `${s.title} ${s.subtitle}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const locked = exporting || busy !== null || bitmapBusy;
@@ -224,8 +226,8 @@ export function App() {
             <select aria-label="スタイルカテゴリ" value={category} onChange={e => setCategory(e.target.value as StyleCategory)}>{styleCategories.map(c => <option key={c.id} value={c.id}>{c.label}{c.id === 'all' ? `（${styles.length}）` : ''}</option>)}</select>
             <label className="style-search"><Search size={12} /><input aria-label="スタイルを検索" placeholder="スタイルを検索" value={query} onChange={e => setQuery(e.target.value)} />{query && <button aria-label="検索をクリア" onClick={() => setQuery('')}><X size={12} /></button>}</label>
           </div>
-          <p className="style-drag-hint">01 / 02 へドラッグして合成</p>
-          <div className="style-list">{visibleStyles.map(s => <button key={s.id} className={`style-card ${settings.style === s.id ? 'selected' : ''}`}
+          <p className="style-drag-hint">レイヤー{selectedLayer === 'base' ? '01' : '02'}に適用 · 01 / 02 へドラッグもできます</p>
+          <div className="style-list">{visibleStyles.map(s => <button key={s.id} className={`style-card ${selectedStyle === s.id ? 'selected' : ''}`}
             aria-label={`${s.title} ${s.subtitle}`}
             draggable={!exporting} title={`${s.title} · ${s.subtitle} · 01 / 02 へドラッグ`}
             onDragStart={e => {
@@ -233,9 +235,10 @@ export function App() {
               e.dataTransfer.setData(STYLE_DRAG_TYPE, s.id); e.dataTransfer.effectAllowed = 'copy';
               setDraggingStyle(true);
             }} onDragEnd={() => setDraggingStyle(false)}
-            disabled={exporting} aria-pressed={settings.style === s.id} onClick={() => update('style', s.id)}>
+            disabled={exporting} aria-pressed={selectedStyle === s.id} onClick={() => setSettings(current => selectedLayer === 'base'
+              ? { ...current, style: s.id } : { ...current, overlay: { ...current.overlay, style: s.id } })}>
             <StyleArt kind={s.className} /><span className="style-info"><strong>{s.title}</strong><small>{s.subtitle}</small></span>
-            <span className="style-check">{settings.style === s.id && <Check size={12} />}</span>
+            <span className="style-check">{selectedStyle === s.id && <Check size={12} />}</span>
           </button>)}</div>
           {!visibleStyles.length && <p className="style-empty" role="status">一致するスタイルがありません</p>}
         </section>
@@ -264,7 +267,7 @@ export function App() {
         <div className="preview-footnote"><span><span className="status-dot" />プレビューと書き出しは同じ映像エンジン</span><span>FULL HD <span className="divider">/</span> 30 FPS</span></div>
         </section>
 
-        <Customizer settings={settings} onChange={setSettings} disabled={exporting} draggingStyle={draggingStyle}
+        <Customizer settings={settings} onChange={setSettings} selectedLayer={selectedLayer} onSelectLayer={setSelectedLayer} disabled={exporting} draggingStyle={draggingStyle}
           bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
           bitmapBusy={bitmapBusy} onChooseBitmap={chooseBitmap} onRemoveBitmap={() => setBitmap(undefined)} />
         </div>
@@ -283,6 +286,6 @@ export function App() {
       </main>
     </div>
     {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源・背景画像をここにドロップ</h2><p>WAV / MP3 / PNG / JPEG / WebP / BMP</p></div></div>}
-    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>{styles.length}種類のスタイル・縦横・色・音への反応を調整。</li><li>「レイヤー合成」で00に背景画像を追加。左のスタイルを01 / 02へドラッグして映像を重ねます。</li><li>「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
+    {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}><button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2><ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li><li>{styles.length}種類のスタイル・縦横・色・音への反応を調整。</li><li>「レイヤー合成」で00に背景画像を追加。左のスタイルを01 / 02へドラッグして映像を重ねます。</li><li>01 / 02の編集ボタンで対象を選び、「カラー・動き」で色や線の太さを調整。左のスタイルも選択中のレイヤーに適用されます。</li><li>「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol><p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p><button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;
 }

@@ -125,9 +125,15 @@ test('all four generative styles can be searched and assigned to either layer at
   await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
   const base = page.getByRole('combobox', { name: 'ベースのスタイル', exact: true });
   const overlay = page.getByRole('combobox', { name: '重ねるスタイル', exact: true });
+  await overlay.selectOption(additions[0].id);
+  await page.getByRole('tab', { name: 'カラー・動き', exact: true }).click();
+  await page.getByRole('slider', { name: '音への反応', exact: true }).fill('10');
+  await page.getByRole('slider', { name: '動きの滑らかさ', exact: true }).fill('2');
+  await page.getByRole('tab', { name: 'レイヤー合成', exact: true }).click();
   const frames: string[] = [];
   for (let i = 0; i < additions.length; i++) {
     const style = additions[i], second = additions[(i + 1) % additions.length];
+    await page.getByRole('button', { name: 'レイヤー01を編集', exact: true }).click();
     await page.getByPlaceholder('スタイルを検索').fill(style.title);
     const card = page.locator('.sidebar .style-card');
     await expect(card).toHaveCount(1); await card.click();

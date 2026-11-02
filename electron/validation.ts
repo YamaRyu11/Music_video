@@ -1,7 +1,13 @@
-import { FEATURE_STRIDE, MAX_DURATION, MAX_INTENSITY, MAX_SMOOTHING, STYLE_IDS, type BitmapSettings, type ExportSpec, type TextDesign } from '../src/shared';
+import { FEATURE_STRIDE, MAX_DURATION, MAX_INTENSITY, MAX_SMOOTHING, MIN_LINE_WIDTH, MAX_LINE_WIDTH, STYLE_IDS, type BitmapSettings, type ExportSpec, type TextDesign, type LayerControls } from '../src/shared';
 
 const hex = (value: unknown) => typeof value === 'string' && /^#[a-f\d]{6}$/i.test(value);
 const range = (value: unknown, min: number, max: number) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+function validLayer(s: LayerControls) {
+  return s && hex(s.color) && hex(s.secondaryColor)
+    && range(s.brightness, .5, 1.5) && range(s.saturation, 0, 2) && range(s.glow, 0, 1)
+    && range(s.intensity, 0, MAX_INTENSITY) && range(s.smoothing, 0, MAX_SMOOTHING)
+    && range(s.lineWidth, MIN_LINE_WIDTH, MAX_LINE_WIDTH);
+}
 function validText(t: TextDesign) {
   return t && range(t.size, 14, 160) && hex(t.color) && ['sans', 'serif', 'mono', 'meiryo'].includes(t.font)
     && [400, 700].includes(t.weight) && typeof t.italic === 'boolean' && typeof t.shadow === 'boolean'
@@ -21,12 +27,10 @@ export function validateExport(spec: ExportSpec): void {
   if (spec.bitmapId !== undefined && (typeof spec.bitmapId !== 'string' || spec.bitmapId.length > 128)) throw new Error('背景画像を読み込み直してください。');
   const s = spec.settings, a = spec.analysis;
   if (!s || !STYLE_IDS.includes(s.style) || !['portrait', 'landscape'].includes(s.aspect)
-    || !hex(s.color) || !hex(s.secondaryColor) || !hex(s.backgroundColor)
-    || !range(s.brightness, 0.5, 1.5) || !range(s.saturation, 0, 2) || !range(s.glow, 0, 1)
-    || !s.overlay || !['none', ...STYLE_IDS].includes(s.overlay.style) || !hex(s.overlay.color)
+    || !validLayer(s) || !hex(s.backgroundColor)
+    || !validLayer(s.overlay) || !['none', ...STYLE_IDS].includes(s.overlay.style)
     || !range(s.overlay.opacity, 0, 1) || !['source-over', 'screen', 'lighter', 'multiply'].includes(s.overlay.blend)
     || !validText(s.titleDesign) || !validText(s.artistDesign) || !validBitmap(s.bitmap)
-    || !range(s.intensity, 0, MAX_INTENSITY) || !range(s.smoothing, 0, MAX_SMOOTHING)
     || typeof s.title !== 'string' || s.title.length > 100 || typeof s.artist !== 'string' || s.artist.length > 100) {
     throw new Error('映像設定を確認してください。');
   }

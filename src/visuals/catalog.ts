@@ -36,3 +36,16 @@ export const styles: StyleDefinition[] = [
   { id: 'moire', title: 'Moire Weave', subtitle: '重なる線がつくる、干渉の織物', className: 'art-moire', category: 'geometry' },
   { id: 'helix', title: 'Ribbon Helix', subtitle: '音でほどける、立体の二重らせん', className: 'art-helix', category: 'space' },
 ];
+
+export function supportsLineWidth(style: StyleId | 'none'): boolean {
+  return style !== 'none' && style !== 'glitch';
+}
+
+export function lineWidthHelp(style: StyleId | 'none'): string {
+  if (style === 'spectrum') return '棒の幅を保ち、基準線の太さを調整します。';
+  if (style === 'chladni') return '砂粒のサイズを保ち、外枠の太さを調整します。';
+  if (style === 'ink') return 'インクの輪郭線の太さを調整します。';
+  if (style === 'helix') return 'リボンの縁と連結線の太さを調整します。';
+  if (style === 'typography') return '装飾線の太さを調整します。文字はテキストタブで編集できます。';
+  return 'スタイルの線部分に適用されます。';
+}

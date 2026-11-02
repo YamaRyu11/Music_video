@@ -21,7 +21,7 @@ const laser: StyleRenderer = (ctx, w, h, t, f, s) => {
       if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
     }
     ctx.strokeStyle = alpha(row % 3 ? s.color : s.secondaryColor, 0.12 + z * 0.65);
-    ctx.lineWidth = 0.7 + z * 1.5; ctx.stroke();
+    ctx.lineWidth = (0.7 + z * 1.5) * s.lineWidth; ctx.stroke();
   }
   for (let column = -10; column <= 10; column++) {
     ctx.beginPath();
@@ -30,7 +30,7 @@ const laser: StyleRenderer = (ctx, w, h, t, f, s) => {
       if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
     }
     ctx.strokeStyle = alpha(column % 2 ? s.color : s.secondaryColor, 0.22 + f.level * 0.24);
-    ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.lineWidth = (1.2) * s.lineWidth; ctx.stroke();
   }
   const radius = unit * (0.025 + f.attack * 0.014 * s.intensity);
   const flare = ctx.createRadialGradient(cx, horizon, 0, cx, horizon, radius * 3);
@@ -60,7 +60,7 @@ const bloom: StyleRenderer = (ctx, w, h, t, f, s) => {
       gradient.addColorStop(1, alpha(s.secondaryColor, 0.03));
       ctx.fillStyle = gradient; ctx.fill();
       ctx.strokeStyle = alpha(ring ? s.secondaryColor : s.color, 0.35 + band * 0.45);
-      ctx.lineWidth = ring ? 1 : 1.6; ctx.stroke(); ctx.restore();
+      ctx.lineWidth = (ring ? 1 : 1.6) * s.lineWidth; ctx.stroke(); ctx.restore();
     }
   }
   for (let i = 0; i < 42; i++) {
@@ -85,7 +85,7 @@ const stars: StyleRenderer = (ctx, w, h, t, f, s) => {
     ctx.beginPath(); ctx.moveTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
     ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
     ctx.strokeStyle = alpha(i % 4 ? s.color : s.secondaryColor, brightness);
-    ctx.lineWidth = unit * (0.0008 + phase * 0.0014); ctx.lineCap = 'round'; ctx.stroke();
+    ctx.lineWidth = (unit * (0.0008 + phase * 0.0014)) * s.lineWidth; ctx.lineCap = 'round'; ctx.stroke();
   }
   const r = unit * (0.025 + f.bass * 0.012 * s.intensity);
   const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3);
@@ -114,7 +114,7 @@ const kaleidoscope: StyleRenderer = (ctx, w, h, t, f, s) => {
         ctx.lineTo(x, y + wide); ctx.closePath();
         ctx.fillStyle = alpha(shard % 2 ? s.color : s.secondaryColor, 0.09 + band * 0.14 + s.glow * 0.06); ctx.fill();
         ctx.strokeStyle = alpha(shard % 2 ? s.secondaryColor : s.color, 0.35 + band * 0.5);
-        ctx.lineWidth = 1.1; ctx.stroke();
+        ctx.lineWidth = (1.1) * s.lineWidth; ctx.stroke();
       }
       ctx.restore();
     }
@@ -125,7 +125,7 @@ const kaleidoscope: StyleRenderer = (ctx, w, h, t, f, s) => {
     if (i) ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
     else ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
   }
-  ctx.strokeStyle = alpha(s.secondaryColor, 0.65); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.strokeStyle = alpha(s.secondaryColor, 0.65); ctx.lineWidth = (1.5) * s.lineWidth; ctx.stroke();
 };
 
 /** A wire contour field of gently travelling hills, raised by the bass bands. */
@@ -148,7 +148,7 @@ const contours: StyleRenderer = (ctx, w, h, t, f, s) => {
       if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
     }
     ctx.strokeStyle = alpha(row % 4 ? s.color : s.secondaryColor, 0.14 + z * 0.56 + f.level * 0.08);
-    ctx.lineWidth = 0.8 + z * 0.8; ctx.stroke();
+    ctx.lineWidth = (0.8 + z * 0.8) * s.lineWidth; ctx.stroke();
   }
   for (let column = 0; column < 7; column++) {
     ctx.beginPath();
@@ -156,7 +156,7 @@ const contours: StyleRenderer = (ctx, w, h, t, f, s) => {
       const p = point(-0.9 + column * 0.3, i / 30);
       if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
     }
-    ctx.strokeStyle = alpha(s.secondaryColor, 0.08 + s.glow * 0.09); ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.strokeStyle = alpha(s.secondaryColor, 0.08 + s.glow * 0.09); ctx.lineWidth = (0.8) * s.lineWidth; ctx.stroke();
   }
 };
 

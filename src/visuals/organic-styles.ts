@@ -35,7 +35,7 @@ const ink: StyleRenderer = (ctx, w, h, t, f, s) => {
     gradient.addColorStop(1, alpha(secondary, 0.015));
     ctx.fillStyle = gradient; ctx.fill();
     ctx.strokeStyle = alpha(primary, 0.14 + band * 0.23 * s.intensity);
-    ctx.lineWidth = unit * 0.0012; ctx.stroke();
+    ctx.lineWidth = (unit * 0.0012) * s.lineWidth; ctx.stroke();
   }
 };
 
@@ -81,7 +81,7 @@ const lissajous: StyleRenderer = (ctx, w, h, t, f, s) => {
   const unit = Math.min(w, h), cx = w / 2, cy = h * 0.44;
   const radius = unit * (0.26 + f.level * s.intensity * 0.035);
   const phase = t * 0.19 + f.bass * 0.7 * s.intensity;
-  ctx.strokeStyle = alpha(s.secondaryColor, 0.07); ctx.lineWidth = 1;
+  ctx.strokeStyle = alpha(s.secondaryColor, 0.07); ctx.lineWidth = (1) * s.lineWidth;
   ctx.beginPath(); ctx.moveTo(cx - radius * 1.14, cy); ctx.lineTo(cx + radius * 1.14, cy);
   ctx.moveTo(cx, cy - radius * 1.14); ctx.lineTo(cx, cy + radius * 1.14); ctx.stroke();
   for (let trace = 0; trace < 3; trace++) {
@@ -95,10 +95,10 @@ const lissajous: StyleRenderer = (ctx, w, h, t, f, s) => {
       if (!step) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     if (trace === 1 && s.glow > 0) {
-      ctx.strokeStyle = alpha(s.color, s.glow * 0.1); ctx.lineWidth = unit * 0.007; ctx.stroke();
+      ctx.strokeStyle = alpha(s.color, s.glow * 0.1); ctx.lineWidth = (unit * 0.007) * s.lineWidth; ctx.stroke();
     }
     ctx.strokeStyle = alpha(trace === 1 ? s.color : s.secondaryColor, trace === 1 ? 0.85 : 0.3 + f.treble * 0.12 * s.intensity);
-    ctx.lineWidth = unit * (trace === 1 ? 0.0017 : 0.001); ctx.stroke();
+    ctx.lineWidth = (unit * (trace === 1 ? 0.0017 : 0.001)) * s.lineWidth; ctx.stroke();
   }
 };
 
@@ -115,7 +115,7 @@ const rain: StyleRenderer = (ctx, w, h, t, f, s) => {
     const length = unit * (0.008 + noise(seed + 9) * 0.014 + f.treble * s.intensity * 0.018);
     const opacity = Math.sin(position * Math.PI) * (0.16 + noise(seed + 4) * 0.38 + f.level * s.intensity * 0.2);
     ctx.strokeStyle = alpha(drop % 4 ? s.color : s.secondaryColor, opacity);
-    ctx.lineWidth = unit * (0.0007 + noise(seed + 7) * 0.001);
+    ctx.lineWidth = (unit * (0.0007 + noise(seed + 7) * 0.001)) * s.lineWidth;
     ctx.beginPath(); ctx.moveTo(x - length * 0.11, y - length); ctx.lineTo(x, y); ctx.stroke();
     if (s.glow > 0.4) {
       ctx.fillStyle = alpha(s.color, opacity * 0.8);
@@ -128,7 +128,7 @@ const rain: StyleRenderer = (ctx, w, h, t, f, s) => {
     const y = floor + (noise(seed + 3) - 0.5) * unit * 0.04;
     const radius = unit * (0.012 + phase * (0.06 + f.bass * s.intensity * 0.045));
     ctx.strokeStyle = alpha(ripple % 2 ? s.color : s.secondaryColor, (1 - phase) * (0.08 + f.bass * s.intensity * 0.3));
-    ctx.lineWidth = unit * 0.0012;
+    ctx.lineWidth = (unit * 0.0012) * s.lineWidth;
     ctx.beginPath(); ctx.ellipse(x, y, radius, radius * 0.18, 0, 0, TAU); ctx.stroke();
   }
 };
