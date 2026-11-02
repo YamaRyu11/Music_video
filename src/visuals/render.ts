@@ -169,7 +169,10 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
   ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
-  ctx.save(); styleRenderers[style](ctx, w, h, t, f, s, context); ctx.restore();
+  ctx.save();
+  ctx.translate(w * (.5 + s.x * .5), h * (.5 + s.y * .5));
+  ctx.scale(s.scaleX, s.scaleY); ctx.translate(-w / 2, -h / 2);
+  styleRenderers[style](ctx, w, h, t, f, s, context); ctx.restore();
 }
 
 function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {

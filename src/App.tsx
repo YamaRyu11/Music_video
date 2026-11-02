@@ -212,7 +212,7 @@ export function App() {
         <div className="top-actions"><div className="aspect-switch" aria-label="動画の向き"><button disabled={exporting} aria-pressed={settings.aspect === 'landscape'} className={settings.aspect === 'landscape' ? 'active' : ''} onClick={() => update('aspect', 'landscape')}><Monitor size={14} />横 16:9</button><button disabled={exporting} aria-pressed={settings.aspect === 'portrait'} className={settings.aspect === 'portrait' ? 'active' : ''} onClick={() => update('aspect', 'portrait')}><Smartphone size={14} />縦 9:16</button></div><button className="icon-button help-button" onClick={() => setHelp(!help)} aria-label="使い方"><CircleHelp size={18} /></button></div>
       </div>
       <LayerToolbar settings={settings} onChange={setSettings} selectedLayer={activeTab === 'color' ? selectedLayer : undefined} onSelectLayer={selectLayer}
-        bitmapSelected={activeTab === 'bitmap'} textSelected={activeTab === 'text'} textTarget={textTarget} onEditText={editText}
+        backgroundSelected={activeTab === 'background'} onEditBackground={()=>setActiveTab('background')} bitmapSelected={activeTab === 'bitmap'} textSelected={activeTab === 'text'} textTarget={textTarget} onEditText={editText}
         disabled={exporting} draggingStyle={draggingStyle} bitmapBusy={bitmapBusy}
         bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
         onChooseBitmap={chooseBitmap} onEditBitmap={() => setActiveTab('bitmap')} onRemoveBitmap={() => setBitmap(undefined)} />

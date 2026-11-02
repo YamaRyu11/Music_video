@@ -6,7 +6,8 @@ function validLayer(s: LayerControls) {
   return s && range(s.opacity, 0, 1) && ['source-over', 'screen', 'lighter', 'multiply'].includes(s.blend) && hex(s.color) && hex(s.secondaryColor)
     && range(s.brightness, .5, 1.5) && range(s.saturation, 0, 2) && range(s.glow, 0, 1)
     && range(s.intensity, 0, MAX_INTENSITY) && range(s.smoothing, 0, MAX_SMOOTHING)
-    && range(s.lineWidth, MIN_LINE_WIDTH, MAX_LINE_WIDTH);
+    && range(s.lineWidth, MIN_LINE_WIDTH, MAX_LINE_WIDTH)
+    && range(s.scaleX, .1, 5) && range(s.scaleY, .1, 5) && range(s.x, -1, 1) && range(s.y, -1, 1);
 }
 function validText(t: TextDesign) {
   return t && range(t.size, 14, 160) && hex(t.color) && ['sans', 'serif', 'mono', 'meiryo'].includes(t.font)
