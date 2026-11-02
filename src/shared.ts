@@ -60,10 +60,14 @@ export interface LayerControls {
   intensity: number;
   smoothing: number;
   lineWidth: number;
+  scaleX: number;
+  scaleY: number;
+  x: number;
+  y: number;
 }
 export const defaultLayerControls: LayerControls = {
   opacity: 1, blend: 'source-over', color: '#b8f36b', secondaryColor: '#67e8d0', brightness: 1, saturation: 1,
-  glow: .5, intensity: 1, smoothing: .5, lineWidth: 1,
+  glow: .5, intensity: 1, smoothing: .5, lineWidth: 1, scaleX: 1, scaleY: 1, x: 0, y: 0,
 };
 export interface VisualSettings extends LayerControls {
   style: StyleId;

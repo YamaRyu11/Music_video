@@ -5,19 +5,15 @@ import { defaultBitmapSettings, defaultLayerControls, defaultSettings, MAX_INTEN
 import { lineWidthHelp, styles, supportsLineWidth } from '../visuals/catalog';
 import { Slider } from './Slider';
 import { BitmapPanel } from './BitmapPanel';
+import { ColorInput } from './ColorInput';
+import { PalettePicker, BackgroundPresets } from './PalettePicker';
 
 const colors = ['#b8f36b', '#67e8d0', '#79acff', '#c79cff', '#ff95b5', '#ffbe73'];
-const palettes = [
-  { name: 'Moss', primary: '#b8f36b', secondary: '#67e8d0' },
-  { name: 'Ocean', primary: '#67e8d0', secondary: '#79acff' },
-  { name: 'Violet', primary: '#c79cff', secondary: '#ff95b5' },
-  { name: 'Sunset', primary: '#ffbe73', secondary: '#ff6a94' },
-];
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (color: string) => void }) {
-  return <label className="color-field"><span>{label}</span><span className="color-field-value"><input type="color" aria-label={label} value={value} onChange={e => onChange(e.target.value)} /><code>{value.toUpperCase()}</code></span></label>;
+  return <label className="color-field"><span>{label}</span><span className="color-field-value"><ColorInput label={label} value={value} onChange={onChange} /><code>{value.toUpperCase()}</code></span></label>;
 }
 
-export type CustomizerTab = 'color' | 'bitmap' | 'text';
+export type CustomizerTab = 'color' | 'bitmap' | 'text' | 'background';
 
 export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, textTarget: target, disabled, bitmapAsset, bitmapBusy, onChooseBitmap, onRemoveBitmap }: {
   settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>; selectedLayer: LayerTarget;
@@ -35,28 +31,28 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
   const lineWidthEnabled = supportsLineWidth(controls.style);
   const editingBitmap = tab === 'bitmap';
   const reset = () => {
-    if (editingBitmap) update('bitmap', { ...defaultBitmapSettings, crop: { ...defaultBitmapSettings.crop } });
+    if (tab === 'background') update('backgroundColor', defaultSettings.backgroundColor);
+    else if (editingBitmap) update('bitmap', { ...defaultBitmapSettings, crop: { ...defaultBitmapSettings.crop } });
     else if (tab === 'text') update(target, { ...defaultSettings[target] });
     else {
       const defaults = selectedLayer === 'base' ? defaultLayerControls : defaultSettings.overlay;
       updateControls({ color: defaults.color, secondaryColor: defaults.secondaryColor, brightness: defaults.brightness,
         saturation: defaults.saturation, glow: defaults.glow, intensity: defaults.intensity,
-        smoothing: defaults.smoothing, lineWidth: defaults.lineWidth });
+        smoothing: defaults.smoothing, lineWidth: defaults.lineWidth, scaleX: defaults.scaleX, scaleY: defaults.scaleY, x: defaults.x, y: defaults.y });
     }
   };
 
   return <section className="adjust-panel">
-    <div className="panel-title"><h2><Settings2 size={16} />{tab === 'bitmap' ? '背景ビットマップ' : tab === 'text' ? 'テキスト' : 'カラー・動き'}</h2><button className="reset-button" disabled={disabled} aria-label="カスタマイズをリセット"
-      title={editingBitmap ? '背景画像の設定を初期値に戻す' : tab === 'text'
+    <div className="panel-title"><h2><Settings2 size={16} />{tab === 'background' ? '背景色' : tab === 'bitmap' ? '背景ビットマップ' : tab === 'text' ? 'テキスト' : 'カラー・動き'}</h2><button className="reset-button" disabled={disabled} aria-label="カスタマイズをリセット"
+      title={tab === 'background' ? '共通背景色を初期値に戻す' : editingBitmap ? '背景画像の設定を初期値に戻す' : tab === 'text'
         ? `${target === 'titleDesign' ? 'タイトル' : 'アーティスト'}のデザインを初期値に戻す`
         : `レイヤー${layerNumber}の色・動きを初期値に戻す`} onClick={reset}><RotateCcw size={13} />リセット</button></div>
-    <div key={`${tab}-${tab === 'color' ? selectedLayer : target}`} role="region" aria-label={tab === 'bitmap' ? '背景ビットマップの設定' : tab === 'text' ? 'テキストの設定' : 'カラー・動きの設定'} className="inspector-content">
+    <div key={`${tab}-${tab === 'color' ? selectedLayer : target}`} role="region" aria-label={tab === 'background' ? '背景色の設定' : tab === 'bitmap' ? '背景ビットマップの設定' : tab === 'text' ? 'テキストの設定' : 'カラー・動きの設定'} className="inspector-content">
       <fieldset disabled={disabled} className="design-fields">
         {tab === 'color' && <>
           <div className="layer-edit-target"><strong>レイヤー{layerNumber}を編集中</strong><span>{targetStyle?.title ?? 'スタイル未設定'}</span></div>
-          <div className="palette-presets">{palettes.map(p => <button key={p.name} className="palette-preset" onClick={() => updateControls({ color: p.primary, secondaryColor: p.secondary })}>
-            <span style={{ background: `linear-gradient(120deg, ${p.primary}, ${p.secondary})` }} />{p.name}</button>)}</div>
-          <div className="color-control"><label>メインカラー</label><div className="swatches">{colors.map(c => <button key={c} title={c} aria-label={`カラー ${c}`} aria-pressed={controls.color === c} className={`swatch ${controls.color === c ? 'chosen' : ''}`} style={{ backgroundColor: c }} onClick={() => updateControls({ color: c })}>{controls.color === c && <Check size={13} />}</button>)}<label className="custom-color" title="カスタムカラー"><span>＋</span><input aria-label="カスタムカラー" type="color" value={controls.color} onChange={e => updateControls({ color: e.target.value })} /></label></div></div>
+          <PalettePicker primary={controls.color} secondary={controls.secondaryColor} disabled={disabled} onChoose={p => updateControls({color:p.primary,secondaryColor:p.secondary})}/>
+          <div className="color-control"><label>メインカラー</label><div className="swatches">{colors.map(c => <button key={c} title={c} aria-label={`カラー ${c}`} aria-pressed={controls.color === c} className={`swatch ${controls.color === c ? 'chosen' : ''}`} style={{ backgroundColor: c }} onClick={() => updateControls({ color: c })}>{controls.color === c && <Check size={13} />}</button>)}<label className="custom-color" title="カスタムカラー"><span>＋</span><ColorInput label="カスタムカラー" value={controls.color} disabled={disabled} onChange={v => updateControls({ color: v })} /></label></div></div>
           <div className="design-grid color-detail"><ColorField label="サブカラー" value={controls.secondaryColor} onChange={v => updateControls({ secondaryColor: v })} /></div>
           <div className="inspector-blend-controls design-grid"><label>合成方法<select aria-label="合成方法" value={controls.blend} onChange={e => updateControls({ blend: e.target.value as LayerControls['blend'] })}><option value="source-over">通常</option><option value="screen">スクリーン</option><option value="lighter">加算（発光）</option><option value="multiply">乗算</option></select></label><Slider label="レイヤーの不透明度" value={controls.opacity} min={0} max={1} onChange={v => updateControls({ opacity: v })} /></div>
           <div className="design-grid three-columns">
@@ -71,9 +67,20 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
           <fieldset disabled={!lineWidthEnabled} className="line-width-control"><Slider label="線の太さ" value={controls.lineWidth} min={.1} max={5} step={.05} onChange={v => updateControls({ lineWidth: v })} /></fieldset>
           <p className="field-note">{lineWidthEnabled ? lineWidthHelp(controls.style) : controls.style === 'none'
             ? 'スタイルを選ぶと、対応する線の太さを調整できます。' : '面で構成するスタイルのため、線の太さは適用されません。'}</p>
+          <details className="style-transform-controls"><summary>サイズ・位置</summary><div className="design-grid">
+            <Slider label="スタイルの横拡大率" value={controls.scaleX} min={.1} max={5} step={.01} onChange={v=>updateControls({scaleX:v})}/>
+            <Slider label="スタイルの縦拡大率" value={controls.scaleY} min={.1} max={5} step={.01} onChange={v=>updateControls({scaleY:v})}/>
+            <Slider label="スタイルの横位置" value={controls.x} min={-1} max={1} step={.01} onChange={v=>updateControls({x:v})}/>
+            <Slider label="スタイルの縦位置" value={controls.y} min={-1} max={1} step={.01} onChange={v=>updateControls({y:v})}/>
+          </div><p className="field-note">選択した映像の図形を調整します。背景画像・文字はそのままです。</p></details>
           <p className="field-note">Shiftを押しながらドラッグすると、細かく調整できます。</p>
         </>}
 
+        {tab === 'background' && <>
+          <p className="field-note">すべてのレイヤーに共通する、最も奥の背景色です。</p>
+          <BackgroundPresets color={settings.backgroundColor} disabled={disabled} onChoose={v=>update('backgroundColor',v)}/>
+          <ColorField label="共通背景色" value={settings.backgroundColor} onChange={v=>update('backgroundColor',v)}/>
+        </>}
         {tab === 'bitmap' && <BitmapPanel settings={settings.bitmap} onChange={value => update('bitmap', value)}
           asset={bitmapAsset} busy={bitmapBusy} disabled={disabled} onChoose={onChooseBitmap} onRemove={onRemoveBitmap} />}
 

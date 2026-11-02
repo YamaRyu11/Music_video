@@ -6,6 +6,7 @@ import './styles.css';
 import './workspace.css';
 import './bitmap-panel.css';
 import './layer-toolbar.css';
+import './color-tools.css';
 
 if (new URLSearchParams(location.search).has('render')) startRenderWorker();
 else createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

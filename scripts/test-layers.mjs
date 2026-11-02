@@ -15,21 +15,21 @@ const startedAt = new Date().toISOString(), results = [], pageErrors = [];
 let app, page, success = false, failure;
 await mkdir(diagnostics, { recursive: true });
 
-const base = { color: '#000000', secondaryColor: '#000000', brightness: .5, saturation: 0,
+const base = { scaleX:1, scaleY:1, x:0, y:0, color: '#000000', secondaryColor: '#000000', brightness: .5, saturation: 0,
   glow: 0, intensity: .2, smoothing: .15, lineWidth: 1.25 };
-const blue = { color: '#2589ff', secondaryColor: '#2589ff', brightness: 1.25, saturation: 1.2,
+const blue = { scaleX:1, scaleY:1, x:0, y:0, color: '#2589ff', secondaryColor: '#2589ff', brightness: 1.25, saturation: 1.2,
   glow: 0, intensity: 1.4, smoothing: .8 };
-const red = { color: '#ff3828', secondaryColor: '#ff3828', brightness: .8, saturation: 1.4,
+const red = { scaleX:1, scaleY:1, x:0, y:0, color: '#ff3828', secondaryColor: '#ff3828', brightness: .8, saturation: 1.4,
   glow: 0, intensity: 1.4, smoothing: .8 };
 const cases = [
   { name: 'blue-thin', aspect: 'landscape', hue: 'blue', controls: { ...blue, lineWidth: .2 } },
   { name: 'blue-thick', aspect: 'landscape', hue: 'blue', controls: { ...blue, lineWidth: 4 } },
-  { name: 'red-thick', aspect: 'portrait', hue: 'red', controls: { ...red, lineWidth: 4 } },
+  { name: 'red-thick', aspect: 'portrait', hue: 'red', controls: { ...red, lineWidth: 4, scaleX:.65, scaleY:1.2, x:.15, y:-.1 } },
   { name: 'gray-reactive', aspect: 'portrait', hue: 'gray', controls: { ...red, brightness: 1.5,
     saturation: 0, glow: .15, intensity: 10, smoothing: 2, lineWidth: 2 } },
 ];
 const sliders = { brightness: '明るさ', saturation: '彩度', glow: '光の広がり', intensity: '音への反応',
-  smoothing: '動きの滑らかさ', lineWidth: '線の太さ' };
+  smoothing: '動きの滑らかさ', lineWidth: '線の太さ', scaleX: 'スタイルの横拡大率', scaleY: 'スタイルの縦拡大率', x: 'スタイルの横位置', y: 'スタイルの縦位置' };
 
 async function stylesPanel() {
   await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
@@ -41,6 +41,7 @@ async function editLayer(number) {
   await expect(page.getByRole('button', { name: `レイヤー${number}を編集`, exact: true })).toHaveAttribute('aria-pressed', 'true');
   await openInspector(page, 'カラー・動き');
   await expect(page.locator('.layer-edit-target')).toContainText(`レイヤー${number}を編集中`);
+  if (await page.locator('.style-transform-controls').getAttribute('open') === null) await page.getByText('サイズ・位置', { exact: true }).click();
 }
 async function setControls(value) {
   await page.getByLabel('カスタムカラー', { exact: true }).fill(value.color);

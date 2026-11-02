@@ -1,6 +1,7 @@
 import { useEffect, useState, type Dispatch, type DragEvent, type SetStateAction } from 'react';
 import { ImagePlus, LoaderCircle, Trash2 } from 'lucide-react';
 import type { LayerControls, LayerTarget, StyleId, VisualSettings } from '../shared';
+import { ColorInput } from './ColorInput';
 import { styles } from '../visuals/catalog';
 import { droppedStyle, isStyleDrag } from '../visuals/style-drag';
 
@@ -45,20 +46,21 @@ function LayerCard({ slot, selected, style, controls, disabled, draggingStyle, o
     </div>
     <div className="header-layer-bottom"><span>{slot === '01' ? 'ベース' : '重ねる映像'}</span>
       <div className="header-layer-colors">
-        <label><span>メイン</span><input type="color" aria-label={`レイヤー${slot}のメインカラー`} value={controls.color} disabled={disabled}
-          onChange={event => { onSelect(); onColors({ color: event.target.value }); }} /></label>
-        <label><span>サブ</span><input type="color" aria-label={`レイヤー${slot}のサブカラー`} value={controls.secondaryColor} disabled={disabled}
-          onChange={event => { onSelect(); onColors({ secondaryColor: event.target.value }); }} /></label>
+        <label><span>メイン</span><ColorInput label={`レイヤー${slot}のメインカラー`} value={controls.color} disabled={disabled} onOpen={onSelect}
+          onChange={v => { onSelect(); onColors({ color: v }); }} /></label>
+        <label><span>サブ</span><ColorInput label={`レイヤー${slot}のサブカラー`} value={controls.secondaryColor} disabled={disabled} onOpen={onSelect}
+          onChange={v => { onSelect(); onColors({ secondaryColor: v }); }} /></label>
       </div>
     </div>
   </div>;
 }
 
 export function LayerToolbar({ settings, onChange, selectedLayer, onSelectLayer, disabled, draggingStyle,
-  bitmapAsset, bitmapBusy, onChooseBitmap, onEditBitmap, onRemoveBitmap, bitmapSelected, textSelected, textTarget, onEditText }: {
+  bitmapAsset, bitmapBusy, onChooseBitmap, onEditBitmap, onRemoveBitmap, backgroundSelected, onEditBackground, bitmapSelected, textSelected, textTarget, onEditText }: {
   settings: VisualSettings; onChange: Dispatch<SetStateAction<VisualSettings>>;
   selectedLayer?: LayerTarget; onSelectLayer: (layer: LayerTarget) => void;
   disabled: boolean; draggingStyle: boolean; bitmapAsset?: { name: string; width: number; height: number };
+  backgroundSelected: boolean; onEditBackground:()=>void;
   bitmapSelected: boolean; textSelected: boolean; textTarget: 'titleDesign' | 'artistDesign'; onEditText: (target: 'titleDesign' | 'artistDesign') => void;
   bitmapBusy: boolean; onChooseBitmap: () => void; onEditBitmap: () => void; onRemoveBitmap: () => void;
 }) {
@@ -66,7 +68,10 @@ export function LayerToolbar({ settings, onChange, selectedLayer, onSelectLayer,
     onChange(current => ({ ...current, overlay: { ...current.overlay, [key]: value } }));
   const imageLocked = disabled || bitmapBusy;
   return <section className="layer-toolbar" aria-label="レイヤー合成">
-    <label className="header-layer-card shared-background"><span>背景色</span><input type="color" aria-label="背景色" disabled={disabled} value={settings.backgroundColor} onChange={e => onChange(s => ({ ...s, backgroundColor: e.target.value }))} /></label>
+    <div className={`header-layer-card shared-background ${backgroundSelected ? 'selected' : ''}`} onClick={()=>{if(!disabled)onEditBackground();}}>
+      <button aria-label="背景色を編集" aria-pressed={backgroundSelected} disabled={disabled} onClick={onEditBackground}>背景色</button>
+      <ColorInput label="背景色" value={settings.backgroundColor} disabled={disabled} onOpen={onEditBackground} onChange={v=>onChange(s=>({...s,backgroundColor:v}))}/>
+    </div>
     <div className={`header-layer-card header-bitmap-card ${bitmapSelected ? 'selected' : ''}`} onClick={() => { if (!disabled) onEditBitmap(); }}>
       <div className="header-layer-top"><span className="layer-number">00</span>
         <button className="header-bitmap-edit" aria-label="背景ビットマップを編集" aria-pressed={bitmapSelected} disabled={disabled} onClick={onEditBitmap}
