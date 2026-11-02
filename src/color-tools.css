@@ -50,3 +50,8 @@
   .color-editor .hsb-channel { margin-top: 12px; }
   .color-editor-done { margin-top: 8px; padding: 8px; }
 }
+
+.scale-lock-row {display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px;gap:8px;color:var(--muted);font-size:11px}
+.scale-lock-button {display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #31403c;border-radius:7px;background:#17211f;color:#cbd8cf;font:inherit;cursor:pointer}
+.scale-lock-button[aria-pressed="true"] {border-color:#b8f36b;color:#b8f36b;background:#253021}
+.scale-lock-button:focus-visible {outline:2px solid #b8f36b;outline-offset:2px}

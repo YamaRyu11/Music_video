@@ -7,6 +7,7 @@ import type { StyleRenderer, StyleRenderContext } from './types';
 import { getTerrainTrack } from './terrain-track';
 import { terrain } from './wire-terrain';
 import { wireObjectRenderers } from './wire-objects';
+import { experimentalRenderers } from './experimental-styles';
 import { generativeRenderers } from './generative-styles';
 import { drawBitmap, type DecodedBitmap } from './bitmap';
 
@@ -167,7 +168,7 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 };
 
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
-  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers };
+  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
   ctx.save();
   ctx.translate(w * (.5 + s.x * .5), h * (.5 + s.y * .5));
@@ -226,9 +227,9 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
     ? sampleFeatures(analysis, time, settings.overlay.smoothing) : features;
   // Grade each graphics layer separately; bitmap and text retain their own colors.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
-  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix'];
+  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers)];
   const context = trackDrivenStyles.includes(settings.style) || trackDrivenStyles.includes(settings.overlay.style)
-    ? { track: getTerrainTrack(analysis) } : undefined;
+    ? { track: getTerrainTrack(analysis), analysis } : undefined;
   const { scene, layer } = surfaces(ctx, width, height);
   const sceneCtx = scene.getContext('2d')!, layerCtx = layer.getContext('2d')!;
   sceneCtx.clearRect(0, 0, width, height);

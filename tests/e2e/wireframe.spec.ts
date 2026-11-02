@@ -1,11 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
+import { styles } from '../../src/visuals/catalog';
 
-const wireStyles = [
-  { id: 'terrain', title: 'Wireframe Journey' },
-  { id: 'wire-tube', title: 'Warp Tunnel' },
-  { id: 'wire-orb', title: 'Resonant Orb' },
-  { id: 'wire-city', title: 'Wireframe Metropolis' },
-];
+const wireStyles = styles.filter(style => style.category === 'wireframe');
 
 async function canvasPixels(page: Page) {
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
@@ -21,14 +17,14 @@ async function expectWindowFits(page: Page) {
   await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
 }
 
-test('the four wireframe worlds retain distinct proportional previews and reproduce a seeked frame', async ({ page }) => {
+test('the wireframe worlds retain distinct proportional previews and reproduce a seeked frame', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 900, height: 640 });
   await page.goto('/');
   await page.getByRole('button', { name: 'サンプル音源で試す' }).click();
   await expect(page.locator('.drop-zone strong')).toContainText('Midnight Bloom.wav');
   await page.getByRole('combobox', { name: 'スタイルカテゴリ', exact: true }).selectOption('wireframe');
-  await expect(page.locator('.sidebar .style-card')).toHaveCount(4);
+  await expect(page.locator('.sidebar .style-card')).toHaveCount(wireStyles.length);
 
   for (const aspect of ['landscape', 'portrait'] as const) {
     await page.getByRole('button', { name: aspect === 'portrait' ? '縦 9:16' : '横 16:9', exact: true }).click();
@@ -50,7 +46,7 @@ test('the four wireframe worlds retain distinct proportional previews and reprod
       expect(canvas!.width / canvas!.height).toBeCloseTo(aspect === 'portrait' ? 9 / 16 : 16 / 9, 2);
       await expectWindowFits(page);
     }
-    expect(new Set(frames).size, `${aspect} needs four different wireframe worlds`).toBe(4);
+    expect(new Set(frames).size, `${aspect} needs distinct wireframe worlds`).toBe(wireStyles.length);
   }
   expect(errors).toEqual([]);
 });

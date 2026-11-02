@@ -53,30 +53,30 @@ export function BitmapPanel({ settings, onChange, asset, busy = false, disabled,
       {tab === 'layout' && <>
         <label className="bitmap-fit">画像の収め方<select aria-label="画像の収め方" value={settings.fit} onChange={e => update('fit', e.target.value as BitmapSettings['fit'])}><option value="cover">画面を埋める</option><option value="contain">画像全体を収める</option></select></label>
         <div className="bitmap-control-grid">
-          <Slider label="画像の拡大率" value={settings.scale} min={.1} max={5} step={.01} onChange={value => update('scale', value)} />
-          <Slider label="画像の回転" value={settings.rotation} min={-180} max={180} step={1} suffix="°" scale={1} onChange={value => update('rotation', value)} />
-          <Slider label="画像の横位置" value={settings.x} min={-1} max={1} step={.01} onChange={value => update('x', value)} />
-          <Slider label="画像の縦位置" value={settings.y} min={-1} max={1} step={.01} onChange={value => update('y', value)} />
+          <Slider label="画像の拡大率" defaultValue={1} value={settings.scale} min={.1} max={5} step={.01} onChange={value => update('scale', value)} />
+          <Slider label="画像の回転" defaultValue={0} value={settings.rotation} min={-180} max={180} step={1} suffix="°" scale={1} onChange={value => update('rotation', value)} />
+          <Slider label="画像の横位置" defaultValue={0} value={settings.x} min={-1} max={1} step={.01} onChange={value => update('x', value)} />
+          <Slider label="画像の縦位置" defaultValue={0} value={settings.y} min={-1} max={1} step={.01} onChange={value => update('y', value)} />
         </div>
         <p className="bitmap-edit-note">拡大率と位置で、見せたい範囲を調整できます。</p>
       </>}
 
       {tab === 'crop' && <>
         <div className="bitmap-control-grid">
-          <Slider label="左の切り抜き" value={settings.crop.left} min={0} max={cropMax('left')} step={.01} onChange={value => updateCrop('left', value)} />
-          <Slider label="右の切り抜き" value={settings.crop.right} min={0} max={cropMax('right')} step={.01} onChange={value => updateCrop('right', value)} />
-          <Slider label="上の切り抜き" value={settings.crop.top} min={0} max={cropMax('top')} step={.01} onChange={value => updateCrop('top', value)} />
-          <Slider label="下の切り抜き" value={settings.crop.bottom} min={0} max={cropMax('bottom')} step={.01} onChange={value => updateCrop('bottom', value)} />
+          <Slider label="左の切り抜き" defaultValue={0} value={settings.crop.left} min={0} max={cropMax('left')} step={.01} onChange={value => updateCrop('left', value)} />
+          <Slider label="右の切り抜き" defaultValue={0} value={settings.crop.right} min={0} max={cropMax('right')} step={.01} onChange={value => updateCrop('right', value)} />
+          <Slider label="上の切り抜き" defaultValue={0} value={settings.crop.top} min={0} max={cropMax('top')} step={.01} onChange={value => updateCrop('top', value)} />
+          <Slider label="下の切り抜き" defaultValue={0} value={settings.crop.bottom} min={0} max={cropMax('bottom')} step={.01} onChange={value => updateCrop('bottom', value)} />
         </div>
         <p className="bitmap-edit-note">画像の各辺から切り抜く量を指定します。元の画像はそのまま残ります。</p>
       </>}
 
       {tab === 'effects' && <>
         <div className="bitmap-control-grid">
-          <Slider label="ガウスぼかし" value={settings.blur} min={0} max={80} step={1} suffix=" px" scale={1} onChange={value => update('blur', value)} />
-          <Slider label="画像の不透明度" value={settings.opacity} min={0} max={1} step={.01} onChange={value => update('opacity', value)} />
-          <Slider label="画像の彩度" value={settings.saturation} min={0} max={2} step={.01} onChange={value => update('saturation', value)} />
-          <Slider label="画像の明るさ" value={settings.brightness} min={0} max={2} step={.01} onChange={value => update('brightness', value)} />
+          <Slider label="ガウスぼかし" defaultValue={0} value={settings.blur} min={0} max={80} step={1} suffix=" px" scale={1} onChange={value => update('blur', value)} />
+          <Slider label="画像の不透明度" defaultValue={1} value={settings.opacity} min={0} max={1} step={.01} onChange={value => update('opacity', value)} />
+          <Slider label="画像の彩度" defaultValue={1} value={settings.saturation} min={0} max={2} step={.01} onChange={value => update('saturation', value)} />
+          <Slider label="画像の明るさ" defaultValue={1} value={settings.brightness} min={0} max={2} step={.01} onChange={value => update('brightness', value)} />
         </div>
         <p className="bitmap-edit-note">背景画像だけに適用されます。音に反応する映像と文字は重ねて表示されます。</p>
       </>}

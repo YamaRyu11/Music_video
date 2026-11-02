@@ -41,7 +41,7 @@ jobs:
       - name: Check types
         run: npm run typecheck
       - name: Check analysis, terrain, bitmap, color and IPC validation
-        run: npx vitest run tests/analysis.test.ts tests/terrain-track.test.ts tests/bitmap.test.ts tests/bitmap-assets.test.ts tests/validation.test.ts tests/color.test.ts
+        run: npx vitest run tests/analysis.test.ts tests/terrain-track.test.ts tests/bitmap.test.ts tests/bitmap-assets.test.ts tests/validation.test.ts tests/color.test.ts tests/scale-lock.test.ts
       - name: Build portable application
         run: npm run dist:win
       - name: Attach downloadable portable folder

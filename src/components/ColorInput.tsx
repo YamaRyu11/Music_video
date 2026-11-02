@@ -14,6 +14,7 @@ function DragNumber({ label, value, max, onChange, decimals = 0 }: { label: stri
 }
 function ColorEditor({ label, value, onChange, onClose }: { label:string; value:string; onChange:(hex:string)=>void;onClose:()=>void }) {
   const [hsb,setHsb]=useState(()=>rgbToHsb(hexToRgb(value))), [hex,setHex]=useState(value);
+  const initialHsb=useRef(rgbToHsb(hexToRgb(value)));
   const emitted=useRef(value);
   useEffect(()=>{setHex(value);if(value!==emitted.current){setHsb(rgbToHsb(hexToRgb(value)));emitted.current=value;}},[value]);
   const rgb=hexToRgb(value);
@@ -28,8 +29,8 @@ function ColorEditor({ label, value, onChange, onClose }: { label:string; value:
     <div className="rgb-fields">{(['r','g','b'] as const).map((id,i)=><label key={id}><span>{['R（赤）','G（緑）','B（青）'][i]}</span><DragNumber label={['R（赤）','G（緑）','B（青）'][i]} value={rgb[id]} max={255} onChange={v=>emitRgb({...rgb,[id]:v})}/></label>)}</div>
     <p className="color-editor-note">数値は直接入力・上下ドラッグで変更できます。Shiftで10倍細かく調整。</p>
     {channels.map(c=><div className="hsb-channel" key={c.id}><label><span>{c.label}</span><DragNumber label={`${c.label}の数値`} value={hsb[c.id]} max={c.max} decimals={1} onChange={v=>emitHsb({...hsb,[c.id]:v})}/><span>{c.unit}</span></label>
-      <div className="hsb-track" style={{background:c.gradient}}><RangeInput aria-label={c.label} min={0} max={c.max} step={.1} value={hsb[c.id]} onValueChange={v=>emitHsb({...hsb,[c.id]:v})}/></div></div>)}
-    <p className="color-editor-note">HSB：H＝色相、S＝彩度、B＝明度。設定はプレビューへ即時反映されます。</p>
+      <div className="hsb-track" style={{background:c.gradient}}><RangeInput aria-label={c.label} defaultValue={initialHsb.current[c.id]} min={0} max={c.max} step={.1} value={hsb[c.id]} onValueChange={v=>emitHsb({...hsb,[c.id]:v})}/></div></div>)}
+    <p className="color-editor-note">HSB：H＝色相、S＝彩度、B＝明度。ダブルクリックで、開いた時の各値に戻ります。</p>
     <button className="color-editor-done" onClick={onClose}>完了</button>
   </Popup>;
 }

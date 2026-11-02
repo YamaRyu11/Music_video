@@ -35,6 +35,14 @@ export const styles: StyleDefinition[] = [
   { id: 'chladni', title: 'Chladni Sand', subtitle: '音の節に集まる、光の砂紋', className: 'art-chladni', category: 'geometry' },
   { id: 'moire', title: 'Moire Weave', subtitle: '重なる線がつくる、干渉の織物', className: 'art-moire', category: 'geometry' },
   { id: 'helix', title: 'Ribbon Helix', subtitle: '音でほどける、立体の二重らせん', className: 'art-helix', category: 'space' },
+  { id: 'waterfall', title: 'Spectral Waterfall', subtitle: '周波数の履歴を流れる、音の地層', className: 'art-waterfall', category: 'space' },
+  { id: 'phosphor', title: 'Phosphor Echo', subtitle: '音の記憶が広がる、光の残像', className: 'art-phosphor', category: 'glow' },
+  { id: 'radar', title: 'Radar Pulse', subtitle: '周波数を探る、光のレーダー', className: 'art-radar', category: 'minimal' },
+  { id: 'metaballs', title: 'Metaball Field', subtitle: '音で溶け合う、液体の等高線', className: 'art-metaballs', category: 'organic' },
+  { id: 'fractal', title: 'Fractal Canopy', subtitle: 'リズムで枝を広げる、光の樹木', className: 'art-fractal', category: 'organic' },
+  { id: 'torus-knot', title: 'Torus Knot', subtitle: '周波数で膨らむ、立体の結び目', className: 'art-torus-knot', category: 'wireframe' },
+  { id: 'cells', title: 'Cellular Bloom', subtitle: '音色で呼吸する、細胞のモザイク', className: 'art-cells', category: 'geometry' },
+  { id: 'crystal', title: 'Crystal Shards', subtitle: '音にきらめく、浮遊する結晶', className: 'art-crystal', category: 'space' },
 ];
 
 export function supportsLineWidth(style: StyleId | 'none'): boolean {
