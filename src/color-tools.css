@@ -55,3 +55,10 @@
 .scale-lock-button {display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #31403c;border-radius:7px;background:#17211f;color:#cbd8cf;font:inherit;cursor:pointer}
 .scale-lock-button[aria-pressed="true"] {border-color:#b8f36b;color:#b8f36b;background:#253021}
 .scale-lock-button:focus-visible {outline:2px solid #b8f36b;outline-offset:2px}
+
+.line-glow-controls {margin:10px 0;padding:10px;border:1px solid #31403c;border-radius:8px;min-width:0}
+.line-glow-toggle {display:flex;align-items:center;gap:8px;font-size:12px;color:#d4e1d7;margin-bottom:12px;cursor:pointer}
+.line-glow-toggle input {accent-color:#b8f36b}
+.line-glow-controls > .design-grid {padding:0;border:0;margin:0;min-width:0}
+.line-glow-controls .field-note {margin-bottom:0}
+.line-glow-controls:disabled {opacity:.5}

@@ -45,6 +45,7 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
     else {
       updateControls({ color: defaults.color, secondaryColor: defaults.secondaryColor, brightness: defaults.brightness,
         saturation: defaults.saturation, glow: defaults.glow, intensity: defaults.intensity,
+        lineGlowEnabled: defaults.lineGlowEnabled, lineGlowStrength: defaults.lineGlowStrength, lineGlowDistance: defaults.lineGlowDistance,
         smoothing: defaults.smoothing, lineWidth: defaults.lineWidth, scaleX: defaults.scaleX, scaleY: defaults.scaleY, scaleLocked: false, x: defaults.x, y: defaults.y });
     }
   };
@@ -74,6 +75,14 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
           <fieldset disabled={!lineWidthEnabled} className="line-width-control"><Slider label="線の太さ" defaultValue={defaults.lineWidth} value={controls.lineWidth} min={.1} max={5} step={.05} onChange={v => updateControls({ lineWidth: v })} /></fieldset>
           <p className="field-note">{lineWidthEnabled ? lineWidthHelp(controls.style) : controls.style === 'none'
             ? 'スタイルを選ぶと、対応する線の太さを調整できます。' : '面で構成するスタイルのため、線の太さは適用されません。'}</p>
+          <fieldset className="line-glow-controls" disabled={!lineWidthEnabled}>
+            <label className="line-glow-toggle"><input type="checkbox" checked={controls.lineGlowEnabled} onChange={e=>updateControls({lineGlowEnabled:e.target.checked})}/>線のグローを有効にする</label>
+            <fieldset disabled={!controls.lineGlowEnabled} className="design-grid">
+              <Slider label="線のグローの強さ" defaultValue={defaults.lineGlowStrength} value={controls.lineGlowStrength} min={0} max={3} step={.01} onChange={v=>updateControls({lineGlowStrength:v})}/>
+              <Slider label="線のグローの距離" defaultValue={defaults.lineGlowDistance} value={controls.lineGlowDistance} min={0} max={160} step={1} scale={1} suffix=" px" onChange={v=>updateControls({lineGlowDistance:v})}/>
+            </fieldset>
+            <p className="field-note">線に沿う光です。距離は光がほぼ消えるまでの目安（出力動画のpx）。背景・文字にはかかりません。</p>
+          </fieldset>
           <details className="style-transform-controls"><summary>サイズ・位置</summary><div className="scale-lock-row"><button className="scale-lock-button" aria-label="縦横比をロック" aria-pressed={controls.scaleLocked} onClick={()=>updateControls({scaleLocked:!controls.scaleLocked})} title="現在の横・縦の比率を固定">{controls.scaleLocked ? <LockKeyhole size={15}/> : <UnlockKeyhole size={15}/>}縦横比{controls.scaleLocked ? '固定中' : 'を固定'}</button><span>{(controls.scaleX/controls.scaleY).toFixed(2)} : 1</span></div><div className="design-grid">
             <Slider label="スタイルの横拡大率" defaultValue={1} onReset={()=>resetScale('scaleX')} value={controls.scaleX} min={scaleLimits(controls,'scaleX').min} max={scaleLimits(controls,'scaleX').max} step={.01} onChange={v=>resize('scaleX',v)}/>
             <Slider label="スタイルの縦拡大率" defaultValue={1} onReset={()=>resetScale('scaleY')} value={controls.scaleY} min={scaleLimits(controls,'scaleY').min} max={scaleLimits(controls,'scaleY').max} step={.01} onChange={v=>resize('scaleY',v)}/>

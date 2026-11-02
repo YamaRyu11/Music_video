@@ -206,6 +206,6 @@ test('wireframe drawing stays finite for silence, spectral extremes and both ori
     } finally { for (const [method, original] of originals) proto[method] = original; }
     return { frames, calls };
   }, wireStyles.map(s => s.id));
-  expect(result.frames).toBe(96);
+  expect(result.frames).toBe(wireStyles.length * 2 * 3 * 4);
   expect(result.calls).toBeGreaterThan(1000);
 });

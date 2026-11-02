@@ -26,6 +26,14 @@ function NewStyleArt({ kind }: { kind: string }) {
     {kind === 'art-torus-knot' && <>{[0,1,2].map(i=><polyline key={i} points={Array.from({length:160},(_,j)=>{const a=j/159*Math.PI*2,r=14+5*Math.cos(a*3);return `${32+Math.cos(a*2)*r+i*.6},${24+Math.sin(a*2)*r*.75+Math.sin(a*3)*4}`;}).join(' ')} opacity={.8-i*.22}/>)}</>}
     {kind === 'art-cells' && <><path d="M4 8L20 4L30 14L24 28L6 25ZM32 14L45 5L59 13L55 30L39 31ZM6 28L24 31L29 43L9 44ZM27 29L32 17L38 33L55 34L57 44L32 44Z" fill="#67e8d0" fillOpacity=".08"/></>}
     {kind === 'art-crystal' && <>{[0,1,2].map(i=><g key={i} transform={`translate(${8+i*19} ${9+i%2*8}) rotate(${i*17})`}><path d="M6 0L12 13L6 29L0 13ZM6 0V29M0 13H12" fill="#67e8d0" fillOpacity=".15"/></g>)}</>}
+    {kind === 'art-rose' && <polyline points={Array.from({length:300},(_,i)=>{const a=i/299*Math.PI*2,r=13*(1+.5*Math.cos(a*6));return `${32+Math.cos(a)*r},${24+Math.sin(a)*r}`}).join(' ')}/>}
+    {kind === 'art-pendulum' && Array.from({length:11},(_,i)=><g key={i}><path d={`M${7+i*5} 5l${Math.sin(i*.7)*7} ${18+i*.8}`}/><circle cx={7+i*5+Math.sin(i*.7)*7} cy={23+i*.8} r="2"/></g>)}
+    {kind === 'art-gyroid' && Array.from({length:7},(_,i)=><path key={i} d={`M4 ${7+i*5}Q18 ${-2+i*5} 32 ${8+i*5}T60 ${7+i*5}M${8+i*8} 4q-12 20 0 40`} opacity=".6"/>)}
+    {kind === 'art-braid' && Array.from({length:7},(_,i)=><polyline key={i} points={Array.from({length:80},(_,j)=>`${4+j/79*56},${24+Math.sin(j/79*Math.PI*5+i*.7)*15*Math.sin(j/79*Math.PI)}`).join(' ')} opacity=".7"/>)}
+    {kind === 'art-oscilloscope' && <><path d="M5 5H59V43H5ZM5 24H59M32 5V43" opacity=".25"/>{[0,1,2].map(i=><polyline key={i} points={Array.from({length:100},(_,j)=>`${5+j/99*54},${14+i*10+Math.sin(j/99*Math.PI*(8+i*2))*(2+Math.sin(j*.15)**2*3)}`).join(' ')}/>)}</>}
+    {kind === 'art-sonar' && Array.from({length:7},(_,i)=><ellipse key={i} cx="32" cy={18+i*2} rx={4+i*4} ry={2+i*1.6} opacity={1-i*.1}/>)}
+    {kind === 'art-ribbons' && Array.from({length:8},(_,i)=><path key={i} d={`M3 ${12+i*3}C24 ${-4+i*4} 37 ${52-i*3} 61 ${13+i*3}`} opacity=".7"/>)}
+    {kind === 'art-orrery' && <>{[8,14,20,26].map((r,i)=><g key={r}><ellipse cx="32" cy="24" rx={r} ry={r*.55} transform={`rotate(${i*9} 32 24)`}/><circle cx={32+r*.7} cy={24-r*.38} r="2" fill="#67e8d0"/></g>)}<circle cx="32" cy="24" r="3"/></>}
   </svg>;
 }
 

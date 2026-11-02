@@ -101,4 +101,12 @@ describe('export IPC boundary', () => {
     }
   });
 
+  it('accepts independent glow settings and rejects malformed values in both layers',()=>{
+    const valid=spec();Object.assign(valid.settings,{lineGlowEnabled:true,lineGlowStrength:3,lineGlowDistance:160});
+    Object.assign(valid.settings.overlay,{lineGlowEnabled:false,lineGlowStrength:0,lineGlowDistance:0});expect(()=>validateExport(valid)).not.toThrow();
+    for(const target of ['base','overlay']) for(const invalid of [{lineGlowEnabled:'true'},{lineGlowStrength:3.01},{lineGlowStrength:NaN},{lineGlowDistance:-1},{lineGlowDistance:Infinity},{lineGlowDistance:160.1}]){
+      const bad=spec();Object.assign(target==='base'?bad.settings:bad.settings.overlay,invalid);expect(()=>validateExport(bad)).toThrow();
+    }
+  });
+
 });

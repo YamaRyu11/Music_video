@@ -43,6 +43,14 @@ export const styles: StyleDefinition[] = [
   { id: 'torus-knot', title: 'Torus Knot', subtitle: '周波数で膨らむ、立体の結び目', className: 'art-torus-knot', category: 'wireframe' },
   { id: 'cells', title: 'Cellular Bloom', subtitle: '音色で呼吸する、細胞のモザイク', className: 'art-cells', category: 'geometry' },
   { id: 'crystal', title: 'Crystal Shards', subtitle: '音にきらめく、浮遊する結晶', className: 'art-crystal', category: 'space' },
+  {id:'rose', title:'Harmonic Rose', subtitle:'音色で咲く、幾重もの調和曲線', className:'art-rose', category:'geometry'},
+  {id:'pendulum', title:'Pendulum Choir', subtitle:'周波数で揺れ幅が変わる、振り子の合唱', className:'art-pendulum', category:'minimal'},
+  {id:'gyroid', title:'Gyroid Lattice', subtitle:'音で表情を変える、立体の迷宮格子', className:'art-gyroid', category:'wireframe'},
+  {id:'braid', title:'Spectral Braid', subtitle:'周波数を編み込む、光の組み紐', className:'art-braid', category:'geometry'},
+  {id:'oscilloscope', title:'Harmonic Scope', subtitle:'音域から合成する、三段の光の波形', className:'art-oscilloscope', category:'minimal'},
+  {id:'sonar', title:'Sonar Rings', subtitle:'音と波打ち、奥へ広がる水面の輪', className:'art-sonar', category:'space'},
+  {id:'ribbons', title:'Woven Ribbons', subtitle:'音色でほぐれる、ふた色の織物', className:'art-ribbons', category:'organic'},
+  {id:'orrery', title:'Orbital Orrery', subtitle:'音で膨らむ天体が巡る、立体の天球儀', className:'art-orrery', category:'space'},
 ];
 
 export function supportsLineWidth(style: StyleId | 'none'): boolean {
