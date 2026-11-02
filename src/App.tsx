@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowRight, AudioLines, Check, CheckCircle2, CircleHel
   Search, Smartphone, Upload, Volume2, X } from 'lucide-react';
 import { defaultSettings, defaultBitmapSettings, dimensions, formatTime, MAX_DURATION, MAX_FILE_BYTES, MAX_BITMAP_BYTES,
   type Analysis, type AudioAsset, type BitmapAsset, type ExportProgress, type LayerTarget, type VisualSettings } from './shared';
-import { renderScene } from './visuals/render';
+import { hitTestText, renderScene } from './visuals/render';
 import { styles, styleCategories, type StyleCategory } from './visuals/catalog';
 import { Customizer, type CustomizerTab } from './components/Customizer';
 import { LayerToolbar } from './components/LayerToolbar';
@@ -25,6 +25,9 @@ export function App() {
   const [settings, setSettings] = useState<VisualSettings>(defaultSettings);
   const [selectedLayer, setSelectedLayer] = useState<LayerTarget>('base');
   const [activeTab, setActiveTab] = useState<CustomizerTab>('color');
+  const [textTarget, setTextTarget] = useState<'titleDesign' | 'artistDesign'>('titleDesign');
+  const selectLayer = (layer: LayerTarget) => { setSelectedLayer(layer); setActiveTab('color'); };
+  const editText = (target: 'titleDesign' | 'artistDesign') => { setTextTarget(target); setActiveTab('text'); };
   const [analysis, setAnalysis] = useState<Analysis>();
   const [asset, setAsset] = useState<{ id?: string; name: string; url: string }>();
   const [bitmap, setBitmap] = useState<{ id?: string; name: string; source: DecodedBitmap }>();
@@ -100,7 +103,7 @@ export function App() {
       const mime = desktopAsset?.mime || file.type || (ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`);
       const source = await decodeBitmap(new Uint8Array(await file.arrayBuffer()), mime);
       setSettings(s => ({ ...s, bitmap: structuredClone(defaultBitmapSettings) }));
-      setBitmap({ id: desktopAsset?.id, name: file.name, source }); setExportStatus(undefined);
+      setBitmap({ id: desktopAsset?.id, name: file.name, source }); setActiveTab('bitmap'); setExportStatus(undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : '背景画像を読み込めませんでした。');
       if (desktopAsset) void window.studio?.releaseBitmap(desktopAsset.id);
@@ -208,7 +211,8 @@ export function App() {
       <div className="brand-row"><a className="brand" href="#" aria-label="Music Video Studio"><span className="brand-symbol"><AudioLines size={22} /></span><span>Music Video <b>Studio</b></span><span className="version">BETA</span></a>
         <div className="top-actions"><div className="aspect-switch" aria-label="動画の向き"><button disabled={exporting} aria-pressed={settings.aspect === 'landscape'} className={settings.aspect === 'landscape' ? 'active' : ''} onClick={() => update('aspect', 'landscape')}><Monitor size={14} />横 16:9</button><button disabled={exporting} aria-pressed={settings.aspect === 'portrait'} className={settings.aspect === 'portrait' ? 'active' : ''} onClick={() => update('aspect', 'portrait')}><Smartphone size={14} />縦 9:16</button></div><button className="icon-button help-button" onClick={() => setHelp(!help)} aria-label="使い方"><CircleHelp size={18} /></button></div>
       </div>
-      <LayerToolbar settings={settings} onChange={setSettings} selectedLayer={selectedLayer} onSelectLayer={setSelectedLayer}
+      <LayerToolbar settings={settings} onChange={setSettings} selectedLayer={activeTab === 'color' ? selectedLayer : undefined} onSelectLayer={selectLayer}
+        bitmapSelected={activeTab === 'bitmap'} textSelected={activeTab === 'text'} textTarget={textTarget} onEditText={editText}
         disabled={exporting} draggingStyle={draggingStyle} bitmapBusy={bitmapBusy}
         bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
         onChooseBitmap={chooseBitmap} onEditBitmap={() => setActiveTab('bitmap')} onRemoveBitmap={() => setBitmap(undefined)} />
@@ -242,8 +246,8 @@ export function App() {
               e.dataTransfer.setData(STYLE_DRAG_TYPE, s.id); e.dataTransfer.effectAllowed = 'copy';
               setDraggingStyle(true);
             }} onDragEnd={() => setDraggingStyle(false)}
-            disabled={exporting} aria-pressed={selectedStyle === s.id} onClick={() => setSettings(current => selectedLayer === 'base'
-              ? { ...current, style: s.id } : { ...current, overlay: { ...current.overlay, style: s.id } })}>
+            disabled={exporting} aria-pressed={selectedStyle === s.id} onClick={() => { selectLayer(selectedLayer); setSettings(current => selectedLayer === 'base'
+              ? { ...current, style: s.id } : { ...current, overlay: { ...current.overlay, style: s.id } }); }}>
             <StyleArt kind={s.className} /><span className="style-info"><strong>{s.title}</strong><small>{s.subtitle}</small></span>
             <span className="style-check">{selectedStyle === s.id && <Check size={12} />}</span>
           </button>)}</div>
@@ -257,7 +261,11 @@ export function App() {
         <div className="editor-grid">
         <section className="preview-column" aria-label="映像プレビューと再生">
         <div className={`preview-stage ${settings.aspect}`} ref={preview}>
-          <canvas ref={canvas} aria-label={`${selected.title} の映像プレビュー`} />
+          <canvas ref={canvas} onClick={e => {
+            if (exporting) return; const c = e.currentTarget, bounds = c.getBoundingClientRect();
+            const target = hitTestText(c.getContext('2d')!, c.width, c.height, audio.current?.currentTime ?? 0, settings, analysis, (e.clientX - bounds.left) * c.width / bounds.width, (e.clientY - bounds.top) * c.height / bounds.height);
+            if (target) editText(target);
+          }} aria-label={`${selected.title} の映像プレビュー`} />
           <div className="preview-top"><span><span className="status-dot" />{selected.title}</span><span>{settings.aspect === 'portrait' ? '1080 × 1920' : '1920 × 1080'}</span></div>
           <button className="fullscreen icon-button" title="プレビューを全画面表示" aria-label="プレビューを全画面表示" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void preview.current?.requestFullscreen(); }}><Maximize2 size={17} /></button>
         </div>
@@ -269,7 +277,7 @@ export function App() {
         </div>
         </section>
 
-        <Customizer settings={settings} onChange={setSettings} selectedLayer={selectedLayer} activeTab={activeTab} onTabChange={setActiveTab} disabled={exporting}
+        <Customizer settings={settings} onChange={setSettings} selectedLayer={selectedLayer} activeTab={activeTab} textTarget={textTarget} disabled={exporting}
           bitmapAsset={bitmap ? { name: bitmap.name, width: bitmap.source.width, height: bitmap.source.height } : undefined}
           bitmapBusy={bitmapBusy} onChooseBitmap={chooseBitmap} onRemoveBitmap={() => setBitmap(undefined)} />
         </div>
@@ -294,7 +302,7 @@ export function App() {
         <li>ヘッダーの01 / 02で編集するレイヤーを選択。左の{styles.length}種類のスタイルを選ぶか、01 / 02へドラッグします。</li>
         <li>各レイヤーのメイン・サブカラーや02の合成方法・不透明度はヘッダーで、「カラー・動き」では反応や線の太さも調整できます。</li>
         <li>00に背景画像を追加。「背景ビットマップ」で配置・トリミング・エフェクトを調整します。</li>
-        <li>「テキスト」で文字をデザイン。再生して確認し、MP4を書き出します。</li></ol>
+        <li>プレビューの文字、または03のタイトル／アーティストを選んで文字をデザイン。再生して確認し、MP4を書き出します。</li></ol>
       <p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p>
       <button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;

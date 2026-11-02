@@ -1,3 +1,4 @@
+import { openInspector } from './inspector.mjs';
 import { _electron as electron, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -32,13 +33,13 @@ const sliders = { brightness: '明るさ', saturation: '彩度', glow: '光の�
 
 async function stylesPanel() {
   await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'レイヤー合成', exact: true })).toHaveCount(0);
+  await openInspector(page, 'カラー・動き');
 }
 async function editLayer(number) {
   await stylesPanel();
   await page.getByRole('button', { name: `レイヤー${number}を編集`, exact: true }).click();
   await expect(page.getByRole('button', { name: `レイヤー${number}を編集`, exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('tab', { name: 'カラー・動き', exact: true }).click();
+  await openInspector(page, 'カラー・動き');
   await expect(page.locator('.layer-edit-target')).toContainText(`レイヤー${number}を編集中`);
 }
 async function setControls(value) {
@@ -122,7 +123,7 @@ try {
   await expect(page.getByRole('combobox', { name: '重ねるスタイル', exact: true })).toHaveValue('wave');
   await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('1');
   await page.getByRole('combobox', { name: '合成方法', exact: true }).selectOption('screen');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('曲名を入力（任意）').fill('LAYER TEST');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('01 / 02 · 独立した色と動き');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('70');

@@ -3,7 +3,7 @@ import { FEATURE_STRIDE, MAX_DURATION, MAX_INTENSITY, MAX_SMOOTHING, MIN_LINE_WI
 const hex = (value: unknown) => typeof value === 'string' && /^#[a-f\d]{6}$/i.test(value);
 const range = (value: unknown, min: number, max: number) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
 function validLayer(s: LayerControls) {
-  return s && hex(s.color) && hex(s.secondaryColor)
+  return s && range(s.opacity, 0, 1) && ['source-over', 'screen', 'lighter', 'multiply'].includes(s.blend) && hex(s.color) && hex(s.secondaryColor)
     && range(s.brightness, .5, 1.5) && range(s.saturation, 0, 2) && range(s.glow, 0, 1)
     && range(s.intensity, 0, MAX_INTENSITY) && range(s.smoothing, 0, MAX_SMOOTHING)
     && range(s.lineWidth, MIN_LINE_WIDTH, MAX_LINE_WIDTH);

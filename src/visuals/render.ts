@@ -230,16 +230,16 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   const sceneCtx = scene.getContext('2d')!, layerCtx = layer.getContext('2d')!;
   sceneCtx.clearRect(0, 0, width, height);
   sceneCtx.save(); sceneCtx.scale(width / w, height / h);
-  const showBitmap = !!bitmap && settings.bitmap.enabled && settings.bitmap.opacity > 0;
-  ambient(sceneCtx, w, h, time, features, settings, showBitmap);
+  ambient(sceneCtx, w, h, time, features, settings, true);
   drawStyle(sceneCtx, settings.style, w, h, time, features, settings, context);
   sceneCtx.restore();
   const grade = `saturate(${settings.saturation}) brightness(${settings.brightness})`;
-  ctx.save(); ctx.filter = grade;
+  ctx.save(); ctx.filter = 'none';
   ctx.fillStyle = settings.backgroundColor; ctx.fillRect(0, 0, width, height); ctx.filter = 'none';
   if (bitmap) drawBitmap(ctx, width, height, bitmap, settings.bitmap);
-  ctx.filter = grade;
-  ctx.drawImage(scene, 0, 0); ctx.filter = 'none';
+  ctx.save(); ctx.filter = grade; ctx.globalAlpha = settings.opacity;
+  ctx.globalCompositeOperation = settings.blend;
+  ctx.drawImage(scene, 0, 0); ctx.restore();
   if (settings.overlay.style !== 'none' && settings.overlay.opacity > 0) {
     layerCtx.clearRect(0, 0, width, height);
     layerCtx.save(); layerCtx.scale(width / w, height / h);
@@ -264,4 +264,34 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
   }
   drawText(ctx, settings.artist, settings.artistDesign, w, h);
   ctx.restore();
+}
+
+/** Hit regions use the same fitting, font, alignment and audio transform as drawText. */
+export function hitTestText(ctx: CanvasRenderingContext2D, width: number, height: number, time: number,
+  settings: VisualSettings, analysis: Analysis | undefined, px: number, py: number): 'titleDesign' | 'artistDesign' | undefined {
+  const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
+  const x = px * w / width, y = py * h / height;
+  const inside = (text: string, d: TextDesign, motion?: { intensity: number; smoothing: number }) => {
+    if (!d.visible || !text) return false;
+    ctx.save(); ctx.font = `${d.italic ? 'italic ' : ''}${d.weight} ${d.size}px ${fontFamilies[d.font]}`;
+    ctx.textAlign = d.align; ctx.textBaseline = 'middle';
+    let sx = 1, sy = 1, cy = h * d.y;
+    if (motion) {
+      const f = analysis ? sampleFeatures(analysis, time, motion.smoothing) : { level: .35, bass: .3, attack: 0 };
+      sx += f.level * .16 * motion.intensity; sy += f.bass * .24 * motion.intensity;
+      cy = Math.min(h - d.size * sy * .65, Math.max(d.size * sy * .65,
+        cy + Math.sin(time * 2) * f.attack * d.size * .16 * motion.intensity));
+    }
+    const fitted = fitText(ctx, text, w * (motion ? .78 / sx : .84));
+    const m = ctx.measureText(fitted), cx = d.align === 'left' ? w * .08 : d.align === 'right' ? w * .92 : w / 2;
+    const left = cx - m.actualBoundingBoxLeft * sx, right = cx + m.actualBoundingBoxRight * sx;
+    const top = cy - m.actualBoundingBoxAscent * sy, bottom = cy + m.actualBoundingBoxDescent * sy;
+    ctx.restore();
+    return x >= left - 6 && x <= right + 6 && y >= top - 6 && y <= bottom + 6;
+  };
+  if (inside(settings.artist, settings.artistDesign)) return 'artistDesign';
+  if (settings.overlay.style === 'typography' && settings.overlay.opacity > 0
+    && inside(settings.title, settings.titleDesign, settings.overlay)) return 'titleDesign';
+  if (!(settings.overlay.style === 'typography' && settings.overlay.opacity === 1)
+    && inside(settings.title, settings.titleDesign, settings.style === 'typography' ? settings : undefined)) return 'titleDesign';
 }

@@ -1,3 +1,4 @@
+import { openInspector } from './inspector';
 import { test, expect, type Page } from '@playwright/test';
 
 test.use({ viewport: { width: 900, height: 640 } });
@@ -10,7 +11,7 @@ async function openBitmapPanel(page: Page) {
   await page.getByLabel('背景色', { exact: true }).fill('#000000');
   await page.getByRole('slider', { name: '光の広がり', exact: true }).fill('0');
   await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
-  await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
+  await openInspector(page, '背景ビットマップ');
 }
 
 async function nextFrame(page: Page) {
@@ -194,14 +195,14 @@ test('transparent PNG, visibility, invalid replacement and removal preserve the 
   await expect(page.getByRole('button', { name: '背景画像を削除', exact: true })).toBeDisabled();
   const transparent = await fixture(page, 'transparent');
   for (const brightness of ['0.5', '1.5']) {
-    await page.getByRole('tab', { name: 'カラー・動き', exact: true }).click();
+    await openInspector(page, 'カラー・動き');
     await page.getByLabel('背景色', { exact: true }).fill('#804020');
     await page.getByRole('slider', { name: '彩度', exact: true }).fill('0');
     await page.getByRole('slider', { name: '明るさ', exact: true }).fill(brightness);
     await nextFrame(page);
     const gradedCorners = await corners();
     await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
-    await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
+    await openInspector(page, '背景ビットマップ');
     await load(page, transparent, 'transparent-grade.png');
     expect(await corners(), `transparent areas should retain background grading at brightness ${brightness}`).toEqual(gradedCorners);
     await page.getByRole('button', { name: 'エフェクト', exact: true }).click();
@@ -233,14 +234,14 @@ test('the bitmap stays behind visual styles, composition and editable text', asy
   await page.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption('spectrum');
   await page.getByLabel('レイヤー02のメインカラー', { exact: true }).fill('#00ff00');
   await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('1');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('曲名を入力（任意）').fill('TEXT LAYER');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('80');
   await page.getByLabel('文字色', { exact: true }).fill('#ff00ff');
   const combined = await stats(page);
   expect(combined.red).toBeGreaterThan(100000); expect(combined.green).toBeGreaterThan(100); expect(combined.magenta).toBeGreaterThan(100);
   await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
-  await page.getByRole('tab', { name: '背景ビットマップ', exact: true }).click();
+  await openInspector(page, '背景ビットマップ');
   await page.getByRole('checkbox', { name: '背景画像を表示', exact: true }).uncheck();
   const hidden = await stats(page);
   expect(hidden.red).toBeLessThan(combined.red * .1); expect(hidden.green).toBeGreaterThan(100); expect(hidden.magenta).toBeGreaterThan(100);

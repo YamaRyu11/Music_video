@@ -1,3 +1,4 @@
+import { openInspector } from './inspector.mjs';
 import { _electron as electron, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -56,7 +57,7 @@ async function previewStats(name) {
 
 async function bitmapPanel() {
   await page.getByRole('button', { name: '背景ビットマップを編集', exact: true }).click();
-  await expect(page.getByRole('tab', { name: '背景ビットマップ', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('region', { name: '背景ビットマップの設定', exact: true })).toBeVisible();
 }
 
 try {
@@ -95,7 +96,10 @@ try {
   await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await page.getByRole('combobox', { name: 'ベースのスタイル', exact: true }).selectOption('spectrum');
   await page.getByRole('combobox', { name: '重ねるスタイル', exact: true }).selectOption('none');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await page.getByRole('button', { name: 'レイヤー01を編集', exact: true }).click();
+  await page.getByRole('slider', { name: 'レイヤーの不透明度', exact: true }).fill('0');
+  await page.getByRole('combobox', { name: '合成方法', exact: true }).selectOption('multiply');
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('曲名を入力（任意）').fill('BITMAP TEST');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('背景と映像・文字の合成検証');
   await page.getByRole('slider', { name: '文字サイズ', exact: true }).fill('70');

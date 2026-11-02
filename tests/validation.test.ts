@@ -84,4 +84,12 @@ describe('export IPC boundary', () => {
       expect(() => validateExport(value)).toThrow();
     }
   });
+  it('validates base blend and opacity at the export boundary', () => {
+    for (const opacity of [NaN, Infinity, -0.1, 1.1]) {
+      const value=spec(); value.settings.opacity=opacity; expect(()=>validateExport(value)).toThrow();
+    }
+    const bad=spec(); bad.settings.blend='copy' as never; expect(()=>validateExport(bad)).toThrow();
+    const valid=spec(); valid.settings.opacity=0;valid.settings.blend='multiply';expect(()=>validateExport(valid)).not.toThrow();
+  });
+
 });

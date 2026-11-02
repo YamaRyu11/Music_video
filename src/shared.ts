@@ -48,7 +48,10 @@ export const fontFamilies: Record<FontId, string> = {
   meiryo: 'Meiryo, "Noto Sans", sans-serif',
 };
 
+export type TextTarget = 'titleDesign' | 'artistDesign';
 export interface LayerControls {
+  opacity: number;
+  blend: BlendMode;
   color: string;
   secondaryColor: string;
   brightness: number;
@@ -59,7 +62,7 @@ export interface LayerControls {
   lineWidth: number;
 }
 export const defaultLayerControls: LayerControls = {
-  color: '#b8f36b', secondaryColor: '#67e8d0', brightness: 1, saturation: 1,
+  opacity: 1, blend: 'source-over', color: '#b8f36b', secondaryColor: '#67e8d0', brightness: 1, saturation: 1,
   glow: .5, intensity: 1, smoothing: .5, lineWidth: 1,
 };
 export interface VisualSettings extends LayerControls {

@@ -1,3 +1,4 @@
+import { openInspector } from './inspector';
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 
@@ -26,7 +27,7 @@ test('sample analysis, playback, seeking, styles and portrait preview work', asy
   await expect(page.locator('.preview-top')).toContainText('1080 × 1920');
   await expect(canvas).toHaveAttribute('width', '432');
   await expect(canvas).toHaveAttribute('height', '768');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('サンプルアーティスト');
   await expect(page.getByRole('button', { name: '動画を書き出す' })).toBeDisabled();
   expect(errors).toEqual([]);
@@ -69,7 +70,7 @@ test('new styles, grading, layer blending and independent typography change the 
   await page.getByRole('combobox', { name: '重ねるスタイル' }).selectOption('none');
   expect(Buffer.compare(base, await image())).toBe(0);
 
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await page.getByPlaceholder('曲名を入力（任意）').fill('夜の音楽 — Midnight');
   await page.getByPlaceholder('アーティスト名を入力（任意）').fill('Artist');
   const plainText = await image();
@@ -91,7 +92,7 @@ test('new styles, grading, layer blending and independent typography change the 
   await page.getByRole('button', { name: 'カスタマイズをリセット' }).click();
   await expect(page.getByRole('banner').getByRole('region', { name: 'レイヤー合成', exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: '重ねるスタイル' })).toHaveValue('none');
-  await page.getByRole('tab', { name: 'テキスト', exact: true }).click();
+  await openInspector(page, 'テキスト');
   await expect(page.getByRole('slider', { name: '文字サイズ', exact: true })).toHaveValue('42');
   await expect(page.getByPlaceholder('曲名を入力（任意）')).toHaveValue('夜の音楽 — Midnight');
   expect(errors).toEqual([]);
