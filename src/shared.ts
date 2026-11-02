@@ -1,9 +1,11 @@
+import type { EncodingSettings } from './export/settings';
 export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'aurora',
   'laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography',
   'terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix',
   'waterfall', 'phosphor', 'radar', 'metaballs', 'fractal', 'torus-knot', 'cells', 'crystal',
   'rose', 'pendulum', 'gyroid', 'braid', 'oscilloscope', 'sonar', 'ribbons', 'orrery',
-  'jellyfish', 'ripple-grid', 'fibonacci', 'sigils', 'origami', 'ribbon-sphere', 'sundial', 'hexwave'] as const;
+  'jellyfish', 'ripple-grid', 'fibonacci', 'sigils', 'origami', 'ribbon-sphere', 'sundial', 'hexwave',
+  'mobius', 'magnetic', 'eclipse', 'hourglass', 'gears', 'comets', 'lightning', 'shell'] as const;
 export type StyleId = typeof STYLE_IDS[number];
 export type Aspect = 'landscape' | 'portrait';
 export type FontId = 'sans' | 'serif' | 'mono' | 'meiryo';
@@ -40,6 +42,7 @@ export interface TextDesign {
   weight: 400 | 700;
   italic: boolean;
   align: 'left' | 'center' | 'right';
+  x: number;
   y: number;
   shadow: boolean;
   visible: boolean;
@@ -92,7 +95,7 @@ export interface VisualSettings extends LayerControls {
 }
 
 const baseText: TextDesign = { size: 42, color: '#f1f5ee', font: 'sans', weight: 400,
-  italic: false, align: 'center', y: 0.79, shadow: true, visible: true };
+  italic: false, align: 'center', x: 0, y: 0.79, shadow: true, visible: true };
 export const defaultSettings: VisualSettings = {
   ...defaultLayerControls,
   style: 'orbit', aspect: 'landscape', backgroundColor: '#080d13',
@@ -121,7 +124,7 @@ export interface AudioAsset {
   name: string;
   bytes: Uint8Array;
 }
-export interface ExportSpec { assetId: string; analysis: Analysis; settings: VisualSettings; bitmapId?: string }
+export interface ExportSpec { assetId: string; analysis: Analysis; settings: VisualSettings; bitmapId?: string; encoding?: EncodingSettings }
 export interface RenderSpec extends ExportSpec { jobId: string; bitmapAsset?: BitmapAsset }
 export type ExportProgress =
   | { state: 'rendering'; progress: number }

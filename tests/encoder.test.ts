@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import { defaultEncoding } from '../src/export/settings';
 import { createEncoder } from '../electron/encoder';
 
 // Real H.264/AAC encoding, not an assertion about the command string.
@@ -15,7 +16,7 @@ it('encodes frames and audio to a probeable full-HD H.264/AAC MP4', async () => 
     execFileSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=220:duration=1', audio]);
     execFileSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=0x294f30:s=1920x1080', '-frames:v', '1', '-threads', '1', frame]);
     const jpeg = await readFile(frame);
-    const encoder = createEncoder(ffmpeg, audio, output, 1, 'landscape');
+    const encoder = createEncoder(ffmpeg, audio, output, 1, 'landscape', {...defaultEncoding,crf:20.5});
     for (let i = 0; i < 30; i++) await encoder.write(jpeg);
     await encoder.finish();
     const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', output], { encoding: 'utf8' }));

@@ -158,6 +158,7 @@ try {
     }, output);
     await page.evaluate(() => { window.bitmapExportEvents = []; });
     await page.locator('.export-button').click();
+    await page.getByRole('button',{name:'この設定で書き出す',exact:true}).click();
     await expect(page.getByRole('region', { name: 'レイヤー合成', exact: true })).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole('button', { name: '背景ビットマップを編集', exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: '背景画像を追加・変更', exact: true })).toBeDisabled();

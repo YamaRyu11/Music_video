@@ -6,3 +6,5 @@ export async function openInspector(page: Page, name: string) {
   const hint = await page.locator('.style-drag-hint').textContent();
   return page.getByRole('button', { name: `レイヤー${hint?.trim().startsWith('レイヤー02') ? '02' : '01'}を編集`, exact: true }).click();
 }
+
+export async function openSection(page:Page,title:string) { const section=page.locator('details').filter({has:page.locator('summary').filter({hasText:title})});if(await section.getAttribute('open')===null)await section.locator('summary').click(); }

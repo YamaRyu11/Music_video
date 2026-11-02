@@ -60,6 +60,7 @@ try {
     await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
     assert.equal(await page.evaluate(() => document.scrollingElement.scrollHeight > document.scrollingElement.clientHeight), false);
     await page.getByRole('button', { name: '動画を書き出す' }).click();
+    await page.getByRole('button',{name:'この設定で書き出す',exact:true}).click();
     await expect(page.locator('.success-message')).toContainText('動画を書き出しました', { timeout: 180_000 });
     const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', outputPath], { encoding: 'utf8' }));
     const video = probe.streams.find(s => s.codec_type === 'video'), audio = probe.streams.find(s => s.codec_type === 'audio');
@@ -82,6 +83,7 @@ try {
   await writeFile(protectedOutput, 'existing output stays intact');
   await app.evaluate(({ dialog }, output) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: output }); }, protectedOutput);
   await page.getByRole('button', { name: '動画を書き出す' }).click();
+    await page.getByRole('button',{name:'この設定で書き出す',exact:true}).click();
   await expect(page.getByRole('button', { name: 'キャンセル', exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'キャンセル', exact: false }).click();
   await expect(page.locator('.cancel-message')).toContainText('キャンセルしました');

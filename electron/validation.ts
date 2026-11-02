@@ -1,3 +1,4 @@
+import { validEncoding } from '../src/export/settings';
 import { FEATURE_STRIDE, MAX_DURATION, MAX_INTENSITY, MAX_SMOOTHING, MIN_LINE_WIDTH, MAX_LINE_WIDTH, STYLE_IDS, type BitmapSettings, type ExportSpec, type TextDesign, type LayerControls } from '../src/shared';
 
 const hex = (value: unknown) => typeof value === 'string' && /^#[a-f\d]{6}$/i.test(value);
@@ -13,7 +14,7 @@ function validLayer(s: LayerControls) {
 function validText(t: TextDesign) {
   return t && range(t.size, 14, 160) && hex(t.color) && ['sans', 'serif', 'mono', 'meiryo'].includes(t.font)
     && [400, 700].includes(t.weight) && typeof t.italic === 'boolean' && typeof t.shadow === 'boolean'
-    && typeof t.visible === 'boolean' && ['left', 'center', 'right'].includes(t.align) && range(t.y, 0.08, 0.92);
+    && typeof t.visible === 'boolean' && ['left', 'center', 'right'].includes(t.align) && range(t.y, 0.08, 0.92) && range(t.x, -1, 1);
 }
 function validBitmap(b: BitmapSettings) {
   return b && typeof b.enabled === 'boolean' && ['cover', 'contain'].includes(b.fit)
@@ -27,6 +28,7 @@ function validBitmap(b: BitmapSettings) {
 export function validateExport(spec: ExportSpec): void {
   if (!spec || typeof spec.assetId !== 'string') throw new Error('音源を選び直してください。');
   if (spec.bitmapId !== undefined && (typeof spec.bitmapId !== 'string' || spec.bitmapId.length > 128)) throw new Error('背景画像を読み込み直してください。');
+  if (spec.encoding !== undefined && !validEncoding(spec.encoding)) throw new Error('書き出し設定を確認してください。');
   const s = spec.settings, a = spec.analysis;
   if (!s || !STYLE_IDS.includes(s.style) || !['portrait', 'landscape'].includes(s.aspect)
     || !validLayer(s) || !hex(s.backgroundColor)

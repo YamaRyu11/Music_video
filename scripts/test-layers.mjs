@@ -163,6 +163,7 @@ try {
     const begun = Date.now();
     await expect(page.locator('.export-button')).toBeInViewport({ ratio: 1 });
     await page.locator('.export-button').click();
+    await page.getByRole('button',{name:'この設定で書き出す',exact:true}).click();
     const mixHeader = page.getByRole('region', { name: 'レイヤー合成', exact: true });
     await expect(mixHeader).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole('button', { name: 'レイヤー01を編集', exact: true })).toBeDisabled();

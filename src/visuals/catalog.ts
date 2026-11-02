@@ -59,6 +59,14 @@ export const styles: StyleDefinition[] = [
   {id:'ribbon-sphere',title:'Ribbon Planet',subtitle:'音にねじれ、球面を包む光のリボン',className:'art-ribbon-sphere',category:'space'},
   {id:'sundial',title:'Sunburst Dial',subtitle:'周波数を刻む、光の目盛りと回転針',className:'art-sundial',category:'minimal'},
   {id:'hexwave',title:'Hexwave Array',subtitle:'音で浮き沈みする、六角形の波',className:'art-hexwave',category:'geometry'},
+  {id:'mobius',title:'Mobius Ribbon',subtitle:'音で幅を変える、ひとひねりの立体リボン',className:'art-mobius',category:'wireframe'},
+  {id:'magnetic',title:'Magnetic Lines',subtitle:'音で極が呼吸する、流れる磁力線',className:'art-magnetic',category:'organic'},
+  {id:'eclipse',title:'Eclipse Corona',subtitle:'周波数に揺らめく、日食の光冠',className:'art-eclipse',category:'glow'},
+  {id:'hourglass',title:'Vortex Hourglass',subtitle:'音で広がり、光の砂が巡る砂時計',className:'art-hourglass',category:'space'},
+  {id:'gears',title:'Harmonic Gears',subtitle:'低音で呼吸し、かみ合って回る歯車',className:'art-gears',category:'geometry'},
+  {id:'comets',title:'Comet Trails',subtitle:'音域ごとに輝く、曲線を巡る彗星',className:'art-comets',category:'glow'},
+  {id:'lightning',title:'Arc Lightning',subtitle:'音で枝の揺れが変わる、光の放電',className:'art-lightning',category:'glow'},
+  {id:'shell',title:'Nautilus Shell',subtitle:'周波数でふくらむ、螺旋の立体貝殻',className:'art-shell',category:'wireframe'},
 ];
 
 export function supportsLineWidth(style: StyleId | 'none'): boolean {

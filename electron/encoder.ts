@@ -1,19 +1,22 @@
+import { defaultEncoding, validEncoding, type EncodingSettings } from '../src/export/settings';
 import { spawn } from 'node:child_process';
 import { OUTPUT_FPS, type Aspect, dimensions } from '../src/shared';
 
-export function encoderArguments(audioPath: string, outputPath: string, duration: number, aspect: Aspect) {
+export function encoderArguments(audioPath: string, outputPath: string, duration: number, aspect: Aspect, encoding: EncodingSettings = defaultEncoding) {
+  if (!validEncoding(encoding)) throw new Error('書き出し設定を確認してください。');
+  const video = encoding.mode === 'quality' ? ['-crf', String(encoding.crf)] : ['-b:v', `${encoding.videoBitrate}M`];
   const [width, height] = dimensions(aspect);
   return ['-hide_banner', '-loglevel', 'error', '-y',
     '-f', 'image2pipe', '-framerate', String(OUTPUT_FPS), '-vcodec', 'mjpeg', '-i', 'pipe:0',
     '-i', audioPath, '-map', '0:v:0', '-map', '1:a:0',
     '-vf', `scale=${width}:${height}:flags=lanczos`,
-    '-c:v', 'libx264', '-preset', 'fast', '-crf', '20', '-pix_fmt', 'yuv420p',
-    '-threads', '4', '-c:a', 'aac', '-b:a', '192k', '-t', String(duration),
+    '-c:v', 'libx264', '-preset', encoding.preset, ...video, '-pix_fmt', 'yuv420p',
+    '-threads', '4', '-c:a', 'aac', '-b:a', `${encoding.audioBitrate}k`, '-t', String(duration),
     '-movflags', '+faststart', '-f', 'mp4', outputPath];
 }
 
-export function createEncoder(executable: string, audioPath: string, outputPath: string, duration: number, aspect: Aspect) {
-  const process = spawn(executable, encoderArguments(audioPath, outputPath, duration, aspect), { windowsHide: true, stdio: ['pipe', 'ignore', 'pipe'] });
+export function createEncoder(executable: string, audioPath: string, outputPath: string, duration: number, aspect: Aspect, encoding: EncodingSettings = defaultEncoding) {
+  const process = spawn(executable, encoderArguments(audioPath, outputPath, duration, aspect, encoding), { windowsHide: true, stdio: ['pipe', 'ignore', 'pipe'] });
   let stderr = '', aborted = false;
   process.stderr.on('data', chunk => { stderr = (stderr + String(chunk)).slice(-8000); });
   // The process's error/close event owns the final failure, including broken pipes.

@@ -105,7 +105,7 @@ ipcMain.handle('export:start', async (event, spec: ExportSpec) => {
     });
     lockWindow(renderer);
     const active: Job = { id: randomUUID(), spec, window: renderer, output, temporary, bitmapAsset,
-      encoder: createEncoder(ffmpegPath(), source.path, temporary, spec.analysis.duration, spec.settings.aspect), frame: 0, finishing: false };
+      encoder: createEncoder(ffmpegPath(), source.path, temporary, spec.analysis.duration, spec.settings.aspect, spec.encoding), frame: 0, finishing: false };
     job = active; resetTimeout(active);
     void active.encoder.done.catch(error => { if (job === active) void stopJob(active, { state: 'error', message: String(error.message) }); });
     renderer.webContents.on('render-process-gone', () => void stopJob(active, { state: 'error', message: '描画プロセスが停止しました。' }));
