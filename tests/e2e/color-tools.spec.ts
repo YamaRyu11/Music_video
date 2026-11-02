@@ -1,3 +1,4 @@
+import {openSection} from './inspector';
 import { test, expect } from '@playwright/test';
 
 test('named pair presets are searchable and scoped to the selected layer',async({page})=>{
@@ -65,14 +66,14 @@ test('style transforms affect only their own geometry and retain independent set
  await page.getByRole('slider',{name:'光の広がり',exact:true}).fill('0');
  const measure=async()=>{await page.evaluate(()=>new Promise<void>(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r()))));return page.locator('canvas').evaluate(c=>{const ctx=(c as HTMLCanvasElement).getContext('2d')!,w=(c as HTMLCanvasElement).width,h=(c as HTMLCanvasElement).height,d=ctx.getImageData(0,0,w,h).data;let minX=w,maxX=0,minY=h,maxY=0,n=0,sum=0;for(let y=0;y<h*.72;y++)for(let x=0;x<w;x++){const p=(y*w+x)*4;if(d[p]>110&&d[p+1]>110&&d[p+2]>110){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);n++;sum+=x;}}return {width:maxX-minX,height:maxY-minY,cx:sum/n/w};});};
  const initial=await measure();
- await page.getByText('サイズ・位置',{exact:true}).click();
+ await openSection(page,'サイズ・位置');
  await page.getByRole('slider',{name:'スタイルの横拡大率',exact:true}).fill('0.5');
  await page.getByRole('slider',{name:'スタイルの縦拡大率',exact:true}).fill('0.5');
  const small=await measure();expect(small.width).toBeLessThan(initial.width*.65);expect(small.height).toBeLessThan(initial.height*.7);
  await page.getByRole('slider',{name:'スタイルの横位置',exact:true}).fill('0.4');expect((await measure()).cx).toBeGreaterThan(small.cx+.15);
- await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await page.getByText('サイズ・位置',{exact:true}).click();
+ await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await openSection(page,'サイズ・位置');
  await expect(page.getByRole('slider',{name:'スタイルの横拡大率',exact:true})).toHaveValue('1');
- await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await page.getByText('サイズ・位置',{exact:true}).click();
+ await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await openSection(page,'サイズ・位置');
  await expect(page.getByRole('slider',{name:'スタイルの横位置',exact:true})).toHaveValue('0.4');
  await page.getByRole('button',{name:'カスタマイズをリセット',exact:true}).click();
  await expect(page.getByRole('slider',{name:'スタイルの横拡大率',exact:true})).toHaveValue('1');

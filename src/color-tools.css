@@ -65,3 +65,24 @@
 
 .layer-background-toggle {display:flex;align-items:center;gap:8px;margin:9px 0 6px;color:#d4e1d7;font-size:12px;cursor:pointer}
 .layer-background-toggle input {accent-color:#b8f36b}
+
+.export-options-button {border:1px solid #364137;border-radius:8px;background:#18201b;color:#d4e1d7;padding:10px 12px;font-size:11px;cursor:pointer;white-space:nowrap;margin-left:auto;margin-right:10px}
+.export-settings-dialog {width:min(480px,calc(100vw - 28px))}
+.encoding-presets {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.encoding-presets button,.encoding-actions>button {padding:9px;border:1px solid #344336;border-radius:7px;background:#1a241d;color:#d5dfd7;cursor:pointer}
+.encoding-presets button[aria-pressed="true"] {border-color:#b8f36b;color:#b8f36b}
+.encoding-select {display:grid;gap:6px;font-size:12px;color:#cedbd2;margin:14px 0}
+.encoding-select select {padding:8px;background:#141c18;color:#d5dfd7;border:1px solid #344336;border-radius:6px}
+.encoding-actions {display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.encoding-actions .primary-button {width:auto;margin:0;color:#15200c;background:#b8f36b}
+@media(max-width:1050px){.export-format h3{font-size:12px}.export-options-button{padding:9px 6px;margin-right:7px}}
+
+.preview-stage canvas[data-transformable="true"] {cursor:grab;touch-action:none;user-select:none}
+.preview-stage canvas[data-transformable="true"]:active {cursor:grabbing}
+.preview-gesture-help {position:absolute;bottom:8px;left:8px;right:8px;text-align:center;font-size:9px;color:#c4cfc6;pointer-events:none;text-shadow:0 1px 3px #000;line-height:1.5}
+
+.inspector-section {min-width:0;margin:10px 0;border:1px solid #303b33;border-radius:8px;background:#141b16}
+.inspector-section>summary {cursor:pointer;padding:10px 11px;font-size:12px;color:#e1eadd;user-select:none}
+.inspector-section>summary:focus-visible {outline:2px solid #b8f36b;outline-offset:-2px}
+.inspector-section-body {padding:3px 11px 11px}
+.inspector-section.style-transform-controls {padding:0}

@@ -7,16 +7,17 @@ import os from 'node:os';
 import assert from 'node:assert/strict';
 
 // Exercise every added style through the actual UI, IPC, render window and encoder.
+const extra = process.argv.includes('--extra');
 const kinetic = process.argv.includes('--kinetic');
 const luminous = process.argv.includes('--luminous');
 const experimental = process.argv.includes('--experimental');
 const wireframes = process.argv.includes('--wireframes');
 const generative = process.argv.includes('--generative');
-const newStyles = kinetic ? ['jellyfish','ripple-grid','fibonacci','sigils','origami','ribbon-sphere','sundial','hexwave'] : luminous ? ['rose','pendulum','gyroid','braid','oscilloscope','sonar','ribbons','orrery'] : experimental ? ['waterfall','phosphor','radar','metaballs','fractal','torus-knot','cells','crystal'] : generative ? ['flowfield', 'chladni', 'moire', 'helix'] : wireframes ? ['terrain', 'wire-tube', 'wire-orb', 'wire-city']
+const newStyles = extra ? ['mobius','magnetic','eclipse','hourglass','gears','comets','lightning','shell'] : kinetic ? ['jellyfish','ripple-grid','fibonacci','sigils','origami','ribbon-sphere','sundial','hexwave'] : luminous ? ['rose','pendulum','gyroid','braid','oscilloscope','sonar','ribbons','orrery'] : experimental ? ['waterfall','phosphor','radar','metaballs','fractal','torus-knot','cells','crystal'] : generative ? ['flowfield', 'chladni', 'moire', 'helix'] : wireframes ? ['terrain', 'wire-tube', 'wire-orb', 'wire-city']
   : ['laser', 'bloom', 'stars', 'ink', 'kaleidoscope', 'contours', 'glitch', 'lissajous', 'rain', 'typography'];
-const mode = kinetic ? 'kinetic' : luminous ? 'luminous' : experimental ? 'experimental' : generative ? 'generative' : wireframes ? 'wireframes' : 'new-styles';
+const mode = extra ? 'extra' : kinetic ? 'kinetic' : luminous ? 'luminous' : experimental ? 'experimental' : generative ? 'generative' : wireframes ? 'wireframes' : 'new-styles';
 const temporary = await mkdtemp(path.join(os.tmpdir(), wireframes ? 'musicvideo-wireframes-' : 'musicvideo-new-styles-'));
-const diagnostics = path.resolve(kinetic ? '.cache/kinetic-export-tests' : luminous ? '.cache/luminous-export-tests' : experimental ? '.cache/experimental-export-tests' : generative ? '.cache/generative-export-tests' : wireframes ? '.cache/wireframe-export-tests' : '.cache/new-style-export-tests');
+const diagnostics = path.resolve(extra ? '.cache/kinetic-extra-export-tests' : kinetic ? '.cache/kinetic-export-tests' : luminous ? '.cache/luminous-export-tests' : experimental ? '.cache/experimental-export-tests' : generative ? '.cache/generative-export-tests' : wireframes ? '.cache/wireframe-export-tests' : '.cache/new-style-export-tests');
 const platform = process.platform === 'win32' ? 'win32-x64/ffmpeg.exe' : 'linux-x64/ffmpeg';
 const ffmpeg = path.resolve(`node_modules/@ffmpeg-installer/${platform}`);
 const ffprobe = process.env.FFPROBE_PATH || 'ffprobe';
@@ -47,7 +48,7 @@ try {
   await expect(page.locator('.export-button')).toBeEnabled();
 
   await page.getByRole('button', { name: 'Ocean', exact: true }).click();
-  if (generative || experimental || luminous || kinetic) {
+  if (generative || experimental || luminous || kinetic || extra) {
     await page.getByRole('slider', { name: '音への反応', exact: true }).fill('10');
     await page.getByRole('slider', { name: '動きの滑らかさ', exact: true }).fill('2');
   }
@@ -100,6 +101,7 @@ try {
     await page.evaluate(() => { window.newStyleExportEvents = []; });
     const begun = Date.now();
     await page.locator('.export-button').click();
+    await page.getByRole('button',{name:'この設定で書き出す',exact:true}).click();
     await page.waitForFunction(() => window.newStyleExportEvents.some(event => ['complete', 'error', 'cancelled'].includes(event.state)), undefined, { timeout: 180_000 });
     const result = await page.evaluate(() => window.newStyleExportEvents.findLast(event => ['complete', 'error', 'cancelled'].includes(event.state)));
     assert.equal(result.state, 'complete', `${style}: ${result.message || result.state}`);

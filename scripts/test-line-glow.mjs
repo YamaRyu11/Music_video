@@ -29,6 +29,7 @@ try{
   const output=path.join(temporary,`${c.name}.mp4`),frame=path.join(diagnostics,`${c.name}.png`);
   await app.evaluate(({dialog},filePath)=>{dialog.showSaveDialog=async()=>({canceled:false,filePath});},output);
   await page.evaluate(()=>{window.glowEvents=[];});await page.locator('.export-button').click();
+    await page.getByRole('button',{name:'この設定で書き出す',exact:true}).click();
   await page.waitForFunction(()=>window.glowEvents.some(e=>['complete','error','cancelled'].includes(e.state)),undefined,{timeout:180000});
   const result=await page.evaluate(()=>window.glowEvents.findLast(e=>['complete','error','cancelled'].includes(e.state)));assert.equal(result.state,'complete',result.message);assert.equal(result.path,output);
   const probe=JSON.parse(execFileSync(process.env.FFPROBE_PATH||'ffprobe',['-v','error','-show_streams','-of','json',output],{encoding:'utf8'}));const video=probe.streams.find(s=>s.codec_type==='video');assert.equal(video.codec_name,'h264');assert.equal(video.width,c.aspect==='portrait'?1080:1920);assert.equal(video.height,c.aspect==='portrait'?1920:1080);assert.equal(video.nb_frames,'30');assert.equal(video.r_frame_rate,'30/1');assert.equal(probe.streams.find(s=>s.codec_type==='audio').codec_name,'aac');

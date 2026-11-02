@@ -116,4 +116,10 @@ describe('export IPC boundary', () => {
     }
   });
 
+  it('validates export options and horizontal text positions',()=>{
+    const valid=spec();valid.encoding={mode:'bitrate',crf:20,videoBitrate:8,audioBitrate:320,preset:'medium'};valid.settings.titleDesign.x=.3;expect(()=>validateExport(valid)).not.toThrow();
+    const bad=spec();bad.encoding={...valid.encoding,preset:'evil' as never};expect(()=>validateExport(bad)).toThrow();
+    const text=spec();text.settings.artistDesign.x=Infinity;expect(()=>validateExport(text)).toThrow();
+  });
+
 });

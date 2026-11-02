@@ -1,3 +1,6 @@
+import {usePreviewGestures} from './components/usePreviewGestures';
+import {ExportDialog} from './components/ExportDialog';
+import {defaultEncoding, type EncodingSettings} from './export/settings';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowRight, AudioLines, Check, CheckCircle2, CircleHelp,
   FileAudio, FolderOpen, HardDrive, Headphones, LoaderCircle, Maximize2, Monitor, Pause, Play,
@@ -42,6 +45,9 @@ export function App() {
   const [query, setQuery] = useState('');
   const [exporting, setExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<ExportProgress>();
+  const [exportOpen,setExportOpen]=useState(false);
+  const [exportIntent,setExportIntent]=useState(false);
+  const [encoding,setEncoding]=useState<EncodingSettings>({...defaultEncoding});
   const [help, setHelp] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null), preview = useRef<HTMLDivElement>(null);
   const audio = useRef<HTMLAudioElement>(null), input = useRef<HTMLInputElement>(null), bitmapInput = useRef<HTMLInputElement>(null);
@@ -171,11 +177,11 @@ export function App() {
     }
   }
   function seek(value: number) { if (audio.current) { audio.current.currentTime = value; setTime(value); } }
-  async function startExport() {
+  async function startExport(options:EncodingSettings) {
     if (!window.studio || !asset?.id || !analysis || exporting) return;
     audio.current?.pause(); setError(''); setExporting(true); setExportStatus(undefined);
     try {
-      const started = await window.studio.startExport({ assetId: asset.id, analysis, settings, bitmapId: bitmap?.id });
+      const started = await window.studio.startExport({ assetId: asset.id, analysis, settings, bitmapId: bitmap?.id, encoding:options });
       if (!started) setExporting(false);
     } catch (err) { setExporting(false); setError(err instanceof Error ? err.message : String(err)); }
   }
@@ -185,6 +191,8 @@ export function App() {
   const visibleStyles = styles.filter(s => (category === 'all' || s.category === category)
     && `${s.title} ${s.subtitle}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const locked = exporting || busy !== null || bitmapBusy;
+  const gestureTarget = activeTab==='color'?selectedLayer:activeTab==='bitmap'&&bitmap?'bitmap':activeTab==='text'?textTarget:undefined;
+  const {consumeClick,...gestureHandlers}=usePreviewGestures(settings,setSettings,gestureTarget,locked||exportOpen);
   const progress = exportStatus && 'progress' in exportStatus ? exportStatus.progress : 0;
 
   return <div className="app-shell" onDragOver={e => {
@@ -261,11 +269,12 @@ export function App() {
         <div className="editor-grid">
         <section className="preview-column" aria-label="映像プレビューと再生">
         <div className={`preview-stage ${settings.aspect}`} ref={preview}>
-          <canvas ref={canvas} onClick={e => {
-            if (exporting) return; const c = e.currentTarget, bounds = c.getBoundingClientRect();
+          <canvas ref={canvas} {...gestureHandlers} tabIndex={0} data-transformable={!!gestureTarget} onClick={e => {
+            if (exporting||consumeClick()) return; const c = e.currentTarget, bounds = c.getBoundingClientRect();
             const target = hitTestText(c.getContext('2d')!, c.width, c.height, audio.current?.currentTime ?? 0, settings, analysis, (e.clientX - bounds.left) * c.width / bounds.width, (e.clientY - bounds.top) * c.height / bounds.height);
             if (target) editText(target);
           }} aria-label={`${selected.title} の映像プレビュー`} />
+          {gestureTarget&&<div className="preview-gesture-help">左ドラッグ：移動 · 右ドラッグ：拡大縮小 · Shift：方向／比率固定 · Esc：取り消す</div>}
           <div className="preview-top"><span><span className="status-dot" />{selected.title}</span><span>{settings.aspect === 'portrait' ? '1080 × 1920' : '1920 × 1080'}</span></div>
           <button className="fullscreen icon-button" title="プレビューを全画面表示" aria-label="プレビューを全画面表示" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void preview.current?.requestFullscreen(); }}><Maximize2 size={17} /></button>
         </div>
@@ -285,7 +294,8 @@ export function App() {
         <div className="export-dock">
         <section className="export-panel">
           <div className="export-format"><span className="export-icon"><ArrowDownToLine size={20} /></span><div><h3>この音を、一本の映像に。</h3><p>MP4 <span>·</span> H.264 / AAC <span>·</span> フルHD / 30fps</p></div></div>
-          <button className="export-button" onClick={startExport} disabled={!asset?.id || !analysis || locked || !window.studio}>{exporting ? <LoaderCircle size={17} className="spin" /> : <ArrowDownToLine size={17} />}{exporting ? '書き出し中…' : '動画を書き出す'}{!exporting && <ArrowRight size={17} />}</button>
+          <button className="export-options-button" aria-label="書き出し設定を開く" disabled={locked} onClick={()=>{setExportIntent(false);setExportOpen(true);}}>画質・音質設定</button>
+          <button className="export-button" onClick={()=>{setExportIntent(true);setExportOpen(true);}} disabled={!asset?.id || !analysis || locked || !window.studio}>{exporting ? <LoaderCircle size={17} className="spin" /> : <ArrowDownToLine size={17} />}{exporting ? '書き出し中…' : '動画を書き出す'}{!exporting && <ArrowRight size={17} />}</button>
         </section>
         {!window.studio && <p className="browser-note"><Monitor size={13} />ブラウザではプレビューをお試しいただけます。MP4出力はデスクトップ版で利用できます。</p>}
         {exporting && <div className="export-progress" role="status"><div><span>{exportStatus?.state === 'encoding' ? '音声と映像をまとめています…' : `映像を生成しています… ${Math.round(progress * 100)}%`}</span><button onClick={() => void window.studio?.cancelExport()}>キャンセル<X size={13} /></button></div><progress max="1" value={progress} /></div>}
@@ -296,13 +306,14 @@ export function App() {
       </main>
     </div>
     {drag && <div className="drag-overlay"><div><Upload size={40} /><h2>音源・背景画像をここにドロップ</h2><p>WAV / MP3 / PNG / JPEG / WebP / BMP</p></div></div>}
+    {exportOpen&&<ExportDialog value={encoding} duration={duration} desktop={!!window.studio} exportNow={exportIntent} onClose={()=>setExportOpen(false)} onConfirm={options=>{setEncoding(options);setExportOpen(false);if(exportIntent&&window.studio&&asset?.id&&analysis)void startExport(options);}}/>}
     {help && <div className="modal-scrim" onClick={() => setHelp(false)}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e => e.stopPropagation()}>
       <button className="icon-button modal-close" onClick={() => setHelp(false)} aria-label="閉じる"><X size={19} /></button><span className="eyebrow">QUICK START</span><h2 id="help-title">音から、あなただけの映像を。</h2>
       <ol><li>WAV / MP3 をドロップ、またはサンプル音源を選択。</li>
         <li>ヘッダーの01 / 02で編集するレイヤーを選択。左の{styles.length}種類のスタイルを選ぶか、01 / 02へドラッグします。</li>
-        <li>各レイヤーのメイン・サブカラーや02の合成方法・不透明度はヘッダーで、「カラー・動き」では反応や線の太さも調整できます。</li>
+        <li>ヘッダーで編集するカードを選択。右のカラー設定・エフェクト・サイズと位置は開閉でき、各レイヤーの合成や動きも調整できます。</li>
         <li>00に背景画像を追加。「背景ビットマップ」で配置・トリミング・エフェクトを調整します。</li>
-        <li>プレビューの文字、または03のタイトル／アーティストを選んで文字をデザイン。再生して確認し、MP4を書き出します。</li></ol>
+        <li>プレビューの文字、または03のタイトル／アーティストを選んで文字をデザイン。再生して確認し、書き出し設定で画質と音質を選んでMP4を書き出します。</li></ol>
       <p>低音は大きな動き、高音は細かな変化、アタックは瞬間的な輝きに。音源はPC内で処理されます。</p><p>Shiftを押しながらスライダーをドラッグすると、10倍細かく調整できます。音源は250 MB・10分まで、出力は30fpsです。</p>
       <button className="primary-button" onClick={() => setHelp(false)}>つくりはじめる<ArrowRight size={16} /></button></section></div>}
   </div>;

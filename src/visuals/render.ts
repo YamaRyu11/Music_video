@@ -8,6 +8,7 @@ import { getTerrainTrack } from './terrain-track';
 import { terrain } from './wire-terrain';
 import { wireObjectRenderers } from './wire-objects';
 import { experimentalRenderers } from './experimental-styles';
+import { kineticExtraRenderers } from './kinetic-extra-styles';
 import { kineticRenderers } from './kinetic-styles';
 import { luminousRenderers } from './luminous-styles';
 import { generativeRenderers } from './generative-styles';
@@ -172,7 +173,7 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 };
 
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
-  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers, ...luminousRenderers, ...kineticRenderers };
+  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers, ...luminousRenderers, ...kineticRenderers, ...kineticExtraRenderers };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
   const glow = captureLineGlow(ctx, s, h);
   ctx = glow.ctx;
@@ -196,7 +197,7 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, d: TextDesign, w:
   ctx.save(); ctx.font = `${d.italic ? 'italic ' : ''}${d.weight} ${d.size}px ${fontFamilies[d.font]}`;
   ctx.textAlign = d.align; ctx.textBaseline = 'middle'; ctx.fillStyle = d.color;
   if (d.shadow) { ctx.shadowColor = '#000000cc'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2; }
-  const x = d.align === 'left' ? w * 0.08 : d.align === 'right' ? w * 0.92 : w / 2;
+  const x = (d.align === 'left' ? w * 0.08 : d.align === 'right' ? w * 0.92 : w / 2) + d.x * w * .5;
   if (motion) {
     const { time, features: f, intensity, glow } = motion;
     const sx = 1 + f.level * .16 * intensity, sy = 1 + f.bass * .24 * intensity;
@@ -234,7 +235,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
     ? sampleFeatures(analysis, time, settings.overlay.smoothing) : features;
   // Grade each graphics layer separately; bitmap and text retain their own colors.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
-  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers), ...Object.keys(luminousRenderers), ...Object.keys(kineticRenderers)];
+  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers), ...Object.keys(luminousRenderers), ...Object.keys(kineticRenderers), ...Object.keys(kineticExtraRenderers)];
   const context = trackDrivenStyles.includes(settings.style) || trackDrivenStyles.includes(settings.overlay.style)
     ? { track: getTerrainTrack(analysis), analysis } : undefined;
   const { scene, layer } = surfaces(ctx, width, height);
@@ -288,7 +289,7 @@ export function hitTestText(ctx: CanvasRenderingContext2D, width: number, height
         cy + Math.sin(time * 2) * f.attack * d.size * .16 * motion.intensity));
     }
     const fitted = fitText(ctx, text, w * (motion ? .78 / sx : .84));
-    const m = ctx.measureText(fitted), cx = d.align === 'left' ? w * .08 : d.align === 'right' ? w * .92 : w / 2;
+    const m = ctx.measureText(fitted), cx = (d.align === 'left' ? w * .08 : d.align === 'right' ? w * .92 : w / 2) + d.x * w * .5;
     const left = cx - m.actualBoundingBoxLeft * sx, right = cx + m.actualBoundingBoxRight * sx;
     const top = cy - m.actualBoundingBoxAscent * sy, bottom = cy + m.actualBoundingBoxDescent * sy;
     ctx.restore();

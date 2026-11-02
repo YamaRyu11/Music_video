@@ -42,6 +42,14 @@ function NewStyleArt({ kind }: { kind: string }) {
     {kind === 'art-ribbon-sphere' && Array.from({length:12},(_,i)=><path key={i} d={`M32 4C${-4+i*6} 13 ${68-i*6} 34 32 44`} opacity=".65"/>)}
     {kind === 'art-sundial' && <><circle cx="32" cy="24" r="15" opacity=".5"/>{Array.from({length:36},(_,i)=>{const a=i/36*Math.PI*2;return <path key={i} d={`M${32+Math.cos(a)*19} ${24+Math.sin(a)*19}l${Math.cos(a)*3} ${Math.sin(a)*3}`}/>})}<path d="M32 24L44 13"/></>}
     {kind === 'art-hexwave' && Array.from({length:24},(_,i)=>{const x=9+i%6*9+(Math.floor(i/6)%2)*4,y=10+Math.floor(i/6)*9;return <polygon key={i} points={Array.from({length:6},(_,j)=>`${x+Math.cos(j*Math.PI/3)*5},${y+Math.sin(j*Math.PI/3)*3.5}`).join(' ')} fill="#67e8d0" fillOpacity=".06"/>})}
+    {kind === 'art-mobius' && [0,1,2,3,4].map(i=><ellipse key={i} cx="32" cy="24" rx={21-i} ry={9+i} transform={`rotate(${i*13} 32 24)`} opacity=".65"/>)}
+    {kind === 'art-magnetic' && Array.from({length:9},(_,i)=><path key={i} d={`M18 24C${-9+i*6} ${-15+i*7} ${73-i*6} ${-15+i*7} 46 24C${73-i*6} ${63-i*7} ${-9+i*6} ${63-i*7} 18 24`} opacity=".6"/>)}
+    {kind === 'art-eclipse' && <><circle cx="32" cy="24" r="14"/>{Array.from({length:40},(_,i)=>{const a=i/40*Math.PI*2,r=16;return <path key={i} d={`M${32+Math.cos(a)*r} ${24+Math.sin(a)*r}l${Math.cos(a)*(3+i%4)} ${Math.sin(a)*(3+i%4)}`} opacity=".65"/>})}</>}
+    {kind === 'art-hourglass' && Array.from({length:10},(_,i)=><path key={i} d={`M${12+i*4} 5Q${42-i*2} 24 ${12+i*4} 43`} opacity=".65"/>)}
+    {kind === 'art-gears' && [[23,21,16],[45,33,11]].map(([x,y,r])=><g key={x}><polygon points={Array.from({length:48},(_,i)=>{const a=i/48*Math.PI*2,k=i%4<2?r:r*.87;return `${x+Math.cos(a)*k},${y+Math.sin(a)*k}`}).join(' ')}/><circle cx={x} cy={y} r={r*.6}/><circle cx={x} cy={y} r={r*.2}/></g>)}
+    {kind === 'art-comets' && [0,1,2,3,4].map(i=><path key={i} d={`M${9+i*9} ${9+i*3}Q${58-i*5} ${50-i*4} ${17+i*7} ${30-i*2}`} opacity=".7"/>)}
+    {kind === 'art-lightning' && Array.from({length:6},(_,i)=><path key={i} d={`M${10+i*8} 5l-4 9 6 3 -8 10 6 2 -4 13`} opacity=".7"/>)}
+    {kind === 'art-shell' && <polyline points={Array.from({length:250},(_,i)=>{const a=i/249*Math.PI*5,r=2*Math.exp(a*.15);return `${31+Math.cos(a)*r},${23+Math.sin(a)*r}`}).join(' ')}/>}
   </svg>;
 }
 

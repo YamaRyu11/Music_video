@@ -7,7 +7,7 @@ export function Popup({ title, onClose, children, className = '' }: { title: str
     const previous = document.activeElement as HTMLElement | null;
     const panel = ref.current!;
     const root = document.getElementById('root'); const wasInert = root?.inert ?? false; if(root) root.inert = true;
-    const focusable = () => Array.from(panel.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]'));
+    const focusable = () => Array.from(panel.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]')).filter(el=>el.getClientRects().length>0);
     (focusable()[0] ?? panel).focus();
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close.current(); }

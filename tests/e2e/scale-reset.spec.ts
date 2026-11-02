@@ -1,7 +1,8 @@
+import {openSection} from './inspector';
 import {test,expect} from '@playwright/test';
 
 test('current non-square ratio locks independently per layer and double-click restores scale',async({page})=>{
- await page.goto('/');await page.getByText('サイズ・位置',{exact:true}).click();
+ await page.goto('/');await openSection(page,'サイズ・位置');
  const x=page.getByRole('slider',{name:'スタイルの横拡大率',exact:true}),y=page.getByRole('slider',{name:'スタイルの縦拡大率',exact:true}),lock=page.getByRole('button',{name:'縦横比をロック',exact:true});
  await x.fill('1.5');await y.fill('0.8');await lock.click();
  await expect(x).toHaveValue('1.5');await expect(y).toHaveValue('0.8');
@@ -10,18 +11,18 @@ test('current non-square ratio locks independently per layer and double-click re
  const box=(await x.boundingBox())!;await page.keyboard.down('Shift');await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();await page.mouse.move(box.x+box.width*.65,box.y+box.height*.5,{steps:8});await page.mouse.up();await page.keyboard.up('Shift');
  expect(Number(await x.inputValue())/Number(await y.inputValue())).toBeCloseTo(1.875,3);
  await y.focus();await page.keyboard.press('Shift+ArrowRight');expect(Number(await x.inputValue())/Number(await y.inputValue())).toBeCloseTo(1.875,3);
- await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await page.getByText('サイズ・位置',{exact:true}).click();
+ await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await openSection(page,'サイズ・位置');
  await expect(lock).toHaveAttribute('aria-pressed','false');await expect(x).toHaveValue('1');await x.fill('0.6');
- await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await page.getByText('サイズ・位置',{exact:true}).click();await expect(lock).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await openSection(page,'サイズ・位置');await expect(lock).toHaveAttribute('aria-pressed','true');
  await y.dblclick();await expect(x).toHaveValue('1');await expect(y).toHaveValue('1');await expect(lock).toHaveAttribute('aria-pressed','true');
  await lock.click();await x.fill('2');await y.fill('0.4');await x.dblclick();await expect(x).toHaveValue('1');await expect(y).toHaveValue('0.4');
- await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await page.getByText('サイズ・位置',{exact:true}).click();await expect(x).toHaveValue('0.6');
+ await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await openSection(page,'サイズ・位置');await expect(x).toHaveValue('0.6');
 });
 
 test('each style and text slider double-clicks to its own default',async({page})=>{
  await page.setViewportSize({width:900,height:640});await page.goto('/');
  for(const layer of ['01','02']){
-  await page.getByRole('button',{name:`レイヤー${layer}を編集`,exact:true}).click();await page.getByText('サイズ・位置',{exact:true}).click();
+  await page.getByRole('button',{name:`レイヤー${layer}を編集`,exact:true}).click();await openSection(page,'サイズ・位置');
   const defaults:Record<string,number>={'レイヤーの不透明度':layer==='01'?1:.5,'明るさ':1,'彩度':1,'光の広がり':.5,'音への反応':1,'動きの滑らかさ':.5,'線の太さ':1,'スタイルの横拡大率':1,'スタイルの縦拡大率':1,'スタイルの横位置':0,'スタイルの縦位置':0};
   // The empty overlay intentionally disables only its line-width control.
   if(layer==='02')await page.getByRole('combobox',{name:'重ねるスタイル',exact:true}).selectOption('wave');
