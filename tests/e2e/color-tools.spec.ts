@@ -1,8 +1,9 @@
+import {expandLayerControls} from './inspector';
 import {openSection} from './inspector';
 import { test, expect } from '@playwright/test';
 
 test('named pair presets are searchable and scoped to the selected layer',async({page})=>{
- await page.setViewportSize({width:900,height:640});await page.goto('/');
+ await page.setViewportSize({width:900,height:640});await page.goto('/');await expandLayerControls(page);
  await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();
  await page.getByRole('button',{name:'配色プリセットを選ぶ',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'配色プリセット',exact:true});await expect(dialog).toBeVisible();
@@ -19,7 +20,7 @@ test('named pair presets are searchable and scoped to the selected layer',async(
 });
 
 test('background card selects named shared background presets without changing style colors',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:'背景色を編集',exact:true}).click();
+ await page.goto('/');await expandLayerControls(page);await page.getByRole('button',{name:'背景色を編集',exact:true}).click();
  await expect(page.getByRole('region',{name:'背景色の設定',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'背景色プリセットを選ぶ',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'背景色プリセット',exact:true});await expect(dialog.locator('.palette-option')).toHaveCount(32);
@@ -32,7 +33,7 @@ test('background card selects named shared background presets without changing s
 });
 
 test('custom color popup synchronizes RGB, HSB and HEX, and supports vertical numeric dragging',async({page})=>{
- await page.goto('/');await page.getByLabel('レイヤー01のメインカラー',{exact:true}).click();
+ await page.goto('/');await expandLayerControls(page);await page.getByLabel('レイヤー01のメインカラー',{exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'レイヤー01のメインカラーの色を編集',exact:true});await expect(dialog).toBeVisible();
  await dialog.getByLabel('HEX',{exact:true}).fill('#ff0000');
  await expect(dialog.getByLabel('R（赤）',{exact:true})).toHaveValue('255');
@@ -61,7 +62,7 @@ test('custom color popup synchronizes RGB, HSB and HEX, and supports vertical nu
 });
 
 test('style transforms affect only their own geometry and retain independent settings',async({page})=>{
- await page.goto('/');await page.getByRole('combobox',{name:'ベースのスタイル',exact:true}).selectOption('wave');
+ await page.goto('/');await expandLayerControls(page);await page.getByRole('combobox',{name:'ベースのスタイル',exact:true}).selectOption('wave');
  await page.getByLabel('レイヤー01のメインカラー',{exact:true}).fill('#ffffff');await page.getByLabel('サブカラー',{exact:true}).fill('#ffffff');
  await page.getByRole('slider',{name:'光の広がり',exact:true}).fill('0');
  const measure=async()=>{await page.evaluate(()=>new Promise<void>(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r()))));return page.locator('canvas').evaluate(c=>{const ctx=(c as HTMLCanvasElement).getContext('2d')!,w=(c as HTMLCanvasElement).width,h=(c as HTMLCanvasElement).height,d=ctx.getImageData(0,0,w,h).data;let minX=w,maxX=0,minY=h,maxY=0,n=0,sum=0;for(let y=0;y<h*.72;y++)for(let x=0;x<w;x++){const p=(y*w+x)*4;if(d[p]>110&&d[p+1]>110&&d[p+2]>110){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);n++;sum+=x;}}return {width:maxX-minX,height:maxY-minY,cx:sum/n/w};});};

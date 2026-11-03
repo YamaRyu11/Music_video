@@ -1,3 +1,4 @@
+import {expandLayerControls} from './inspector.mjs';
 import { openInspector } from './inspector.mjs';
 import { _electron as electron, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, writeFile, readdir, rm } from 'node:fs/promises';
@@ -14,6 +15,7 @@ try {
   if (process.platform === 'linux' && process.env.STUDIO_TEST_NO_SANDBOX === '1') args.unshift('--no-sandbox', '--disable-gpu');
   app = await electron.launch({ args, timeout: 30_000 });
   const page = await app.firstWindow();
+  await expandLayerControls(page);
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   await expect(page.locator('h1')).toHaveText('音楽を、映像に。');

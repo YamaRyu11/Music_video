@@ -50,6 +50,14 @@ function NewStyleArt({ kind }: { kind: string }) {
     {kind === 'art-comets' && [0,1,2,3,4].map(i=><path key={i} d={`M${9+i*9} ${9+i*3}Q${58-i*5} ${50-i*4} ${17+i*7} ${30-i*2}`} opacity=".7"/>)}
     {kind === 'art-lightning' && Array.from({length:6},(_,i)=><path key={i} d={`M${10+i*8} 5l-4 9 6 3 -8 10 6 2 -4 13`} opacity=".7"/>)}
     {kind === 'art-shell' && <polyline points={Array.from({length:250},(_,i)=>{const a=i/249*Math.PI*5,r=2*Math.exp(a*.15);return `${31+Math.cos(a)*r},${23+Math.sin(a)*r}`}).join(' ')}/>}
+    {kind === 'art-superformula' && <><path d="M13 11L32 4L51 11L56 24L51 37L32 44L13 37L8 24Z"/>{[0,1,2,3,4].map(i=><ellipse key={i} cx="32" cy="24" rx={8+i*4} ry={20-i*2} opacity=".55"/>)}</>}
+    {kind === 'art-string-art' && Array.from({length:20},(_,i)=><path key={i} d={`M${9+i*2.3} 41L55 ${7+i*1.7}M9 ${7+i*1.7}L${55-i*2.3} 41`} opacity=".5"/>)}
+    {kind === 'art-fireflies' && Array.from({length:32},(_,i)=><g key={i}><circle cx={6+i*17%53} cy={5+i*11%38} r={i%4===0?1.5:.7} fill="#67e8d0"/>{i%3===0&&<path d={`M${6+i*17%53} ${5+i*11%38}l6 4`} opacity=".3"/>}</g>)}
+    {kind === 'art-circuit' && Array.from({length:7},(_,i)=><g key={i}><path d={`M6 ${7+i*5}h${12+i*3}v${i%2?7:-4}H58`} opacity=".65"/><circle cx="6" cy={7+i*5} r="1"/></g>)}
+    {kind === 'art-gravity-well' && <>{Array.from({length:7},(_,i)=><path key={i} d={`M4 ${9+i*4}Q25 ${10+i*3} 32 ${24+i*3}Q39 ${10+i*3} 60 ${9+i*4}`} opacity=".65"/>)}<ellipse cx="32" cy="29" rx="8" ry="4"/></>}
+    {kind === 'art-stained-glass' && <>{[9,16,22].map(r=><polygon key={r} points={Array.from({length:12},(_,i)=>`${32+Math.cos(i*Math.PI/6)*r},${24+Math.sin(i*Math.PI/6)*r}`).join(' ')} fill="#67e8d0" fillOpacity=".05"/>)}{Array.from({length:12},(_,i)=><path key={i} d={`M32 24L${32+Math.cos(i*Math.PI/6)*22} ${24+Math.sin(i*Math.PI/6)*22}`} opacity=".65"/>)}</>}
+    {kind === 'art-paper-fan' && <>{Array.from({length:17},(_,i)=><path key={i} d={`M32 43L${32+Math.cos(-2.7+i/16*2.25)*29} ${43+Math.sin(-2.7+i/16*2.25)*29}`} opacity=".65"/>)}<path d="M6 31Q32 -7 58 31"/></>}
+    {kind === 'art-bubbles' && [[14,30,9],[38,14,10],[51,36,6],[26,39,4]].map(([x,y,r])=><g key={x}><circle cx={x} cy={y} r={r}/><path d={`M${x-r*.6} ${y-r*.3}q1 -3 ${r*.5} ${-r*.4}`} opacity=".7"/></g>)}
   </svg>;
 }
 

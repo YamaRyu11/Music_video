@@ -67,6 +67,14 @@ export const styles: StyleDefinition[] = [
   {id:'comets',title:'Comet Trails',subtitle:'音域ごとに輝く、曲線を巡る彗星',className:'art-comets',category:'glow'},
   {id:'lightning',title:'Arc Lightning',subtitle:'音で枝の揺れが変わる、光の放電',className:'art-lightning',category:'glow'},
   {id:'shell',title:'Nautilus Shell',subtitle:'周波数でふくらむ、螺旋の立体貝殻',className:'art-shell',category:'wireframe'},
+  {id:'superformula',title:'Superformula Sculpture',subtitle:'音色で姿を変える、数式の立体彫刻',className:'art-superformula',category:'wireframe'},
+  {id:'string-art',title:'String Canopy',subtitle:'音が編む、糸の包絡線の天蓋',className:'art-string-art',category:'geometry'},
+  {id:'fireflies',title:'Firefly Grove',subtitle:'音域に呼応し、ゆるくつながるホタルの群れ',className:'art-fireflies',category:'organic'},
+  {id:'circuit',title:'Circuit Pulse',subtitle:'周波数で光り、信号が流れる回路図',className:'art-circuit',category:'minimal'},
+  {id:'gravity-well',title:'Gravity Well',subtitle:'低音で深く沈む、重力の格子と軌道',className:'art-gravity-well',category:'wireframe'},
+  {id:'stained-glass',title:'Stained Glass',subtitle:'音域ごとに色が満ちる、光のステンドグラス',className:'art-stained-glass',category:'geometry'},
+  {id:'paper-fan',title:'Folding Fan',subtitle:'低音でひらき、周波数で光る折り扇',className:'art-paper-fan',category:'geometry'},
+  {id:'bubbles',title:'Bubble Chamber',subtitle:'音色でふくらみ、光を映して昇る泡',className:'art-bubbles',category:'organic'},
 ];
 
 export function supportsLineWidth(style: StyleId | 'none'): boolean {

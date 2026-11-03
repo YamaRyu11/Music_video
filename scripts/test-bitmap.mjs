@@ -1,3 +1,4 @@
+import {expandLayerControls} from './inspector.mjs';
 import { openInspector } from './inspector.mjs';
 import { _electron as electron, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
@@ -68,6 +69,7 @@ try {
   app = await electron.launch({ args, timeout: 30_000 });
   app.on('window', window => window.on('pageerror', error => pageErrors.push(error.message)));
   page = await app.firstWindow(); page.on('pageerror', error => pageErrors.push(error.message));
+  await expandLayerControls(page);
   await expect(page.locator('h1')).toHaveText('音楽を、映像に。');
 
   // Original fixture: solid red on the left; alternating blue brightness on the right.

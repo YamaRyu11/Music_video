@@ -8,6 +8,7 @@ import { getTerrainTrack } from './terrain-track';
 import { terrain } from './wire-terrain';
 import { wireObjectRenderers } from './wire-objects';
 import { experimentalRenderers } from './experimental-styles';
+import { fieldRenderers } from './field-styles';
 import { kineticExtraRenderers } from './kinetic-extra-styles';
 import { kineticRenderers } from './kinetic-styles';
 import { luminousRenderers } from './luminous-styles';
@@ -173,7 +174,7 @@ const typography: StyleRenderer = (ctx, w, h, t, f, s) => {
 };
 
 const styleRenderers: Record<StyleId, StyleRenderer> = { orbit, spectrum, particles, wave, tunnel, aurora,
-  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers, ...luminousRenderers, ...kineticRenderers, ...kineticExtraRenderers };
+  ...spatialRenderers, ...organicRenderers, typography, terrain, ...wireObjectRenderers, ...generativeRenderers, ...experimentalRenderers, ...luminousRenderers, ...kineticRenderers, ...kineticExtraRenderers, ...fieldRenderers };
 function drawStyle(ctx: CanvasRenderingContext2D, style: StyleId, w: number, h: number, t: number, f: Features, s: VisualSettings, context?: StyleRenderContext) {
   const glow = captureLineGlow(ctx, s, h);
   ctx = glow.ctx;
@@ -235,7 +236,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, width: number, height
     ? sampleFeatures(analysis, time, settings.overlay.smoothing) : features;
   // Grade each graphics layer separately; bitmap and text retain their own colors.
   const w = settings.aspect === 'portrait' ? 1080 : 1920, h = settings.aspect === 'portrait' ? 1920 : 1080;
-  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers), ...Object.keys(luminousRenderers), ...Object.keys(kineticRenderers), ...Object.keys(kineticExtraRenderers)];
+  const trackDrivenStyles: string[] = ['terrain', 'wire-tube', 'wire-orb', 'wire-city', 'flowfield', 'chladni', 'moire', 'helix', ...Object.keys(experimentalRenderers), ...Object.keys(luminousRenderers), ...Object.keys(kineticRenderers), ...Object.keys(kineticExtraRenderers), ...Object.keys(fieldRenderers)];
   const context = trackDrivenStyles.includes(settings.style) || trackDrivenStyles.includes(settings.overlay.style)
     ? { track: getTerrainTrack(analysis), analysis } : undefined;
   const { scene, layer } = surfaces(ctx, width, height);

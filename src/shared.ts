@@ -5,7 +5,8 @@ export const STYLE_IDS = ['orbit', 'spectrum', 'particles', 'wave', 'tunnel', 'a
   'waterfall', 'phosphor', 'radar', 'metaballs', 'fractal', 'torus-knot', 'cells', 'crystal',
   'rose', 'pendulum', 'gyroid', 'braid', 'oscilloscope', 'sonar', 'ribbons', 'orrery',
   'jellyfish', 'ripple-grid', 'fibonacci', 'sigils', 'origami', 'ribbon-sphere', 'sundial', 'hexwave',
-  'mobius', 'magnetic', 'eclipse', 'hourglass', 'gears', 'comets', 'lightning', 'shell'] as const;
+  'mobius', 'magnetic', 'eclipse', 'hourglass', 'gears', 'comets', 'lightning', 'shell',
+  'superformula', 'string-art', 'fireflies', 'circuit', 'gravity-well', 'stained-glass', 'paper-fan', 'bubbles'] as const;
 export type StyleId = typeof STYLE_IDS[number];
 export type Aspect = 'landscape' | 'portrait';
 export type FontId = 'sans' | 'serif' | 'mono' | 'meiryo';
