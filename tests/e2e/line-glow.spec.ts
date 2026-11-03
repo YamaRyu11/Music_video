@@ -1,7 +1,8 @@
+import {expandLayerControls} from './inspector';
 import { test, expect } from '@playwright/test';
 
 test('stroke bloom changes strength and falloff, preserves fills/text and leaves zero/off byte-identical', async ({page})=>{
- await page.goto('/');
+ await page.goto('/');await expandLayerControls(page);
  const values=await page.evaluate(async()=>{
   const glowPath='/src/visuals/line-glow.ts',sharedPath='/src/shared.ts';
   const {captureLineGlow}=await import(glowPath) as typeof import('../../src/visuals/line-glow');
@@ -27,7 +28,7 @@ test('stroke bloom changes strength and falloff, preserves fills/text and leaves
 });
 
 test('line glow stays independent per layer, retains values when off, supports reset and small portrait layout',async({page})=>{
- await page.setViewportSize({width:900,height:640});await page.goto('/');
+ await page.setViewportSize({width:900,height:640});await page.goto('/');await expandLayerControls(page);
  const enabled=page.getByRole('checkbox',{name:'線のグローを有効にする',exact:true}),strength=page.getByRole('slider',{name:'線のグローの強さ',exact:true}),distance=page.getByRole('slider',{name:'線のグローの距離',exact:true});
  await expect(enabled).not.toBeChecked();await expect(strength).toBeDisabled();await enabled.check();await strength.fill('2.5');await distance.fill('72');
  await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await page.getByRole('combobox',{name:'重ねるスタイル',exact:true}).selectOption('wave');
@@ -42,7 +43,7 @@ test('line glow stays independent per layer, retains values when off, supports r
 });
 
 test('bloom remains local to its own transformed graphics layer and not the background',async({page})=>{
- await page.goto('/');
+ await page.goto('/');await expandLayerControls(page);
  const results=await page.evaluate(async()=>{
   const renderPath='/src/visuals/render.ts',sharedPath='/src/shared.ts';
   const {renderScene}=await import(renderPath) as typeof import('../../src/visuals/render');

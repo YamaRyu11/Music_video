@@ -1,7 +1,8 @@
+import {expandLayerControls} from './inspector';
 import {test,expect} from '@playwright/test';
 
 test('normal 100% preserves source alpha, while a filled backdrop covers the lower frame even at blur edges',async({page})=>{
- await page.goto('/');
+ await page.goto('/');await expandLayerControls(page);
  const r=await page.evaluate(async()=>{
   const path='/src/visuals/layer-composite.ts',shared='/src/shared.ts';
   const {compositeLayer}=await import(path) as typeof import('../../src/visuals/layer-composite');
@@ -24,7 +25,7 @@ test('normal 100% preserves source alpha, while a filled backdrop covers the low
 });
 
 test('rendered overlay backdrop hides base, opacity reveals it, and graphics blur leaves bitmap and text intact',async({page})=>{
- await page.goto('/');
+ await page.goto('/');await expandLayerControls(page);
  const result=await page.evaluate(async()=>{
   const path='/src/visuals/render.ts',shared='/src/shared.ts';const {renderScene}=await import(path) as typeof import('../../src/visuals/render');const {defaultSettings}=await import(shared) as typeof import('../../src/shared');
   const canvas=document.createElement('canvas');canvas.width=640;canvas.height=360;const ctx=canvas.getContext('2d')!;
@@ -44,7 +45,7 @@ test('rendered overlay backdrop hides base, opacity reveals it, and graphics blu
 });
 
 test('layer blur and filled backgrounds are independent, resettable, and keep the small portrait workspace usable',async({page})=>{
- await page.setViewportSize({width:900,height:640});await page.goto('/');
+ await page.setViewportSize({width:900,height:640});await page.goto('/');await expandLayerControls(page);
  const blur=page.getByRole('slider',{name:'映像のガウスぼかし',exact:true}),fill=page.getByRole('checkbox',{name:'レイヤーの背景を塗る',exact:true});
  await expect(blur).toHaveValue('0');await expect(fill).not.toBeChecked();await blur.fill('24');await fill.check();
  await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await expect(blur).toHaveValue('0');await expect(fill).not.toBeChecked();await blur.fill('8');

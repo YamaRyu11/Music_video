@@ -3,7 +3,10 @@
 WAV / MP3 から、音に反応するフルHD動画をつくるWindows向けデスクトップアプリ。
 **ZIPを展開してEXEを起動する、インストール不要のフォルダ型ポータブル版**です。
 
-## v0.14.0 の機能
+## v0.15.0 の機能
+
+- 右カラムのカラー設定・エフェクト・サイズと位置は、01／02とも初期状態で閉じます
+- Superformula Sculpture / String Canopy / Firefly Grove / Circuit Pulse / Gravity Well / Stained Glass / Folding Fan / Bubble Chamberを追加
 
 - 選択中のカードをプレビューで移動・拡大縮小。Shiftで軸／現在比率を固定し、Escで取り消し
 - 書き出し前に軽量・標準・高品質、CRF／平均ビットレート、AAC音質、処理速度を選択
@@ -26,7 +29,7 @@ WAV / MP3 から、音に反応するフルHD動画をつくるWindows向けデ�
 
 - 音源のドラッグ＆ドロップ・ファイル選択・オリジナルのサンプル音源
 - 音量（RMS）・アタック（スペクトルの立ち上がり）・48帯域の周波数解析
-- 全56スタイル。Flow Field / Chladni Sand / Moire Weave / Ribbon Helixなどを収録
+- 全64スタイル。Flow Field / Chladni Sand / Moire Weave / Ribbon Helixなどを収録
 - 横1920×1080 / 縦1080×1920、30fps
 - カテゴリ（ミニマル・発光・幾何学・有機的・空間・タイポグラフィ・ワイヤーフレーム）とスタイル名・説明での検索
 - 全体スクロールなしのカラム型ワークスペース。プレビューは比率を保って可変サイズ、縦動画は設定を右に配置
@@ -81,6 +84,7 @@ npm run test:new-styles
 npm run test:wireframes
 npm run test:bitmap
 npm run test:export-options
+npm run test:field-styles
 npm run test:extra-styles
 npm run test:layer-effects
 npm run test:kinetic
@@ -92,7 +96,7 @@ npm run test:generative
 
 - ユニットテスト: FFTの周波数検出、無音、音量差、アタック、位相反転ステレオ、地形の履歴、背景画像の切り抜き・配置、01／02の独立設定と線幅の範囲、IPC入力検証。
 - エンコードテスト: 同梱FFmpegで実際に生成したMP4を`ffprobe`で検査します。開発機には`ffprobe`を用意してください。
-- ブラウザ操作テスト: 音源読み込み・再生・シーク・56スタイル・カテゴリ・検索・縦横切替・色調整・合成・文字編集・不正ファイルの処理。不透明度0の合成はベースと画素が同じになることも検査します。01／02の編集対象・左一覧の適用先・文脈に応じたリセット・線幅も確認します。上部ヘッダーの常設、メイン／サブ色の同期、カードに連動して設定パネルが切り替わることも確認します。
+- ブラウザ操作テスト: 音源読み込み・再生・シーク・64スタイル・カテゴリ・検索・縦横切替・色調整・合成・文字編集・不正ファイルの処理。不透明度0の合成はベースと画素が同じになることも検査します。01／02の編集対象・左一覧の適用先・文脈に応じたリセット・線幅も確認します。上部ヘッダーの常設、メイン／サブ色の同期、カードに連動して設定パネルが切り替わることも確認します。
 - 背景画像操作テスト: PNG / JPEG / WebP / BMP、切り抜き・配置・ぼかし・彩度・明るさ・不透明度、表示切替と不正な画像の処理をCanvasの画素で検査します。
 - 微調整テスト: 通常／Shiftドラッグ、途中でのShift切替、Shift＋矢印、反応1000%・滑らかさ200%を検査します。
 - Chromiumは標準で`/usr/bin/chromium`を使用します。別の環境では`CHROMIUM_PATH`に実行ファイルを指定してください。
@@ -109,7 +113,7 @@ npm run test:generative
 
 クラウド内の`/workspace/...`へのリンクは、PCへ保存できるダウンロードURLではありません。
 GitHubでこのリポジトリの **Actions → Windows portable build → 成功した実行** を開き、
-画面下部の **Artifacts → MusicVideoStudio-0.14.0-Windows-x64** をクリックしてください。
+画面下部の **Artifacts → MusicVideoStudio-0.15.0-Windows-x64** をクリックしてください。
 GitHubへのログインが必要です。成果物の保存期間は30日です。
 期限が切れた場合は **Run workflow** で再作成できます。
 
@@ -122,7 +126,7 @@ GitHubへのログインが必要です。成果物の保存期間は30日です
 npm run dist:win
 ```
 
-成果物: `release/MusicVideoStudio-0.14.0-Windows-x64.zip`
+成果物: `release/MusicVideoStudio-0.15.0-Windows-x64.zip`
 
 ElectronとWindows用FFmpegを含めてパッケージングします。Linux上でのクロスビルドにも対応し、
 Windows用FFmpegの取得時にはロックファイルのSHA-512を照合します。ビルドは公開・アップロードを行いません。
@@ -326,3 +330,8 @@ Glitch Blocksは線がないため操作できません。Spectrumは基準線�
 - 詳細：画質優先のCRF14〜30（Shiftで0.1刻み）、または平均1〜50Mbps。AAC128／192／256／320kbps。圧縮速度は4段階。
 
 CRFは小さいほど高画質・大容量です。平均ビットレートの容量表示は音声込みの目安で、実際の容量は変動します。CRF方式の容量は映像の動き・細かさによって変わります。書き出し設定のキャンセルでは出力を開始しません。
+
+
+## 右カラムの初期状態（v0.15.0）
+
+01／02の「カラー設定」「エフェクト」「サイズ・位置」は、初期状態ではすべて閉じています。見出しをクリックして開くと、カードごとに起動中の開閉状態を保持します。閉じても設定値や映像への効果は変わりません。

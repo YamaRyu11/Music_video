@@ -1,8 +1,9 @@
+import {expandLayerControls} from './inspector';
 import {openSection} from './inspector';
 import {test,expect} from '@playwright/test';
 
 test('current non-square ratio locks independently per layer and double-click restores scale',async({page})=>{
- await page.goto('/');await openSection(page,'サイズ・位置');
+ await page.goto('/');await expandLayerControls(page);await openSection(page,'サイズ・位置');
  const x=page.getByRole('slider',{name:'スタイルの横拡大率',exact:true}),y=page.getByRole('slider',{name:'スタイルの縦拡大率',exact:true}),lock=page.getByRole('button',{name:'縦横比をロック',exact:true});
  await x.fill('1.5');await y.fill('0.8');await lock.click();
  await expect(x).toHaveValue('1.5');await expect(y).toHaveValue('0.8');
@@ -20,7 +21,7 @@ test('current non-square ratio locks independently per layer and double-click re
 });
 
 test('each style and text slider double-clicks to its own default',async({page})=>{
- await page.setViewportSize({width:900,height:640});await page.goto('/');
+ await page.setViewportSize({width:900,height:640});await page.goto('/');await expandLayerControls(page);
  for(const layer of ['01','02']){
   await page.getByRole('button',{name:`レイヤー${layer}を編集`,exact:true}).click();await openSection(page,'サイズ・位置');
   const defaults:Record<string,number>={'レイヤーの不透明度':layer==='01'?1:.5,'明るさ':1,'彩度':1,'光の広がり':.5,'音への反応':1,'動きの滑らかさ':.5,'線の太さ':1,'スタイルの横拡大率':1,'スタイルの縦拡大率':1,'スタイルの横位置':0,'スタイルの縦位置':0};
@@ -38,7 +39,7 @@ test('each style and text slider double-clicks to its own default',async({page})
 });
 
 test('color sliders restore their opening values and seek resets to the beginning',async({page})=>{
- await page.goto('/');await page.getByLabel('レイヤー01のメインカラー',{exact:true}).click();
+ await page.goto('/');await expandLayerControls(page);await page.getByLabel('レイヤー01のメインカラー',{exact:true}).click();
  const dialog=page.getByRole('dialog'),sliders=dialog.getByRole('slider');
  const initial=await sliders.evaluateAll(nodes=>nodes.map(n=>(n as HTMLInputElement).value));
  for(let i=0;i<3;i++){await sliders.nth(i).fill(i===0?'180':'20');await sliders.nth(i).dblclick();expect(Number(await sliders.nth(i).inputValue())).toBeCloseTo(Number(initial[i]),5);}
@@ -47,7 +48,7 @@ test('color sliders restore their opening values and seek resets to the beginnin
 });
 
 test('bitmap sliders reset independently, including dynamically bounded crop sliders',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:'背景ビットマップを編集',exact:true}).click();
+ await page.goto('/');await expandLayerControls(page);await page.getByRole('button',{name:'背景ビットマップを編集',exact:true}).click();
  // Enable the controls using a real dropped bitmap, without depending on native dialogs.
  await page.evaluate(()=>{
   const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#abcdef';ctx.fillRect(0,0,64,64);

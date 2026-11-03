@@ -1,3 +1,4 @@
+import {expandLayerControls} from './inspector';
 import { openInspector } from './inspector';
 import { test, expect, type Page } from '@playwright/test';
 
@@ -26,7 +27,7 @@ async function chooseLibrary(page: Page, title: string) {
 }
 
 test('layer cards support keyboard selection, none, and matching library selection', async ({ page }) => {
-  await page.goto('/'); await layers(page);
+  await page.goto('/');await expandLayerControls(page); await layers(page);
   await expect(edit(page, '01')).toHaveAttribute('aria-pressed', 'true');
   await edit(page, '02').focus(); await page.keyboard.press('Enter');
   await expect(edit(page, '02')).toHaveAttribute('aria-pressed', 'true');
@@ -48,7 +49,7 @@ test('layer cards support keyboard selection, none, and matching library selecti
 });
 
 test('layer controls, palettes, global background and reset retain their own scope', async ({ page }) => {
-  await page.goto('/'); await controls(page, '01');
+  await page.goto('/');await expandLayerControls(page); await controls(page, '01');
   await page.getByLabel('カスタムカラー', { exact: true }).fill('#ff8844');
   await page.getByLabel('サブカラー', { exact: true }).fill('#44ff88');
   for (const [i, value] of ['0.75', '0.5', '0.25', '3.2', '1.25', '2.3'].entries()) await page.getByRole('slider', { name: motionLabels[i], exact: true }).fill(value);
@@ -90,7 +91,7 @@ test('layer controls, palettes, global background and reset retain their own sco
 
 test('overlay color, motion, smoothing, grade and stroke width affect pixels without leaking into base', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/'); await page.getByRole('button', { name: 'サンプル音源で試す', exact: true }).click();
+  await page.goto('/');await expandLayerControls(page); await page.getByRole('button', { name: 'サンプル音源で試す', exact: true }).click();
   await expect(page.locator('.drop-zone strong')).toContainText('Midnight Bloom.wav');
   await page.getByRole('slider', { name: '再生位置', exact: true }).fill('2');
   await layers(page); await edit(page, '02').click(); await chooseLibrary(page, 'Silk Wave');
@@ -131,7 +132,7 @@ test('overlay color, motion, smoothing, grade and stroke width affect pixels wit
 });
 
 test('drops select the destination layer while cancelling a drag preserves the editing target', async ({ page }) => {
-  await page.goto('/'); await layers(page);
+  await page.goto('/');await expandLayerControls(page); await layers(page);
   await page.locator('.sidebar .style-card').filter({ hasText: 'Silk Wave' }).dragTo(page.locator('[data-layer-slot="02"]'));
   await expect(edit(page, '02')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('combobox', { name: 'ベースのスタイル', exact: true })).toHaveValue('orbit');
@@ -162,7 +163,7 @@ test('drops select the destination layer while cancelling a drag preserves the e
 
 test('selected-layer stroke width supports Shift precision without global scrolling on a small window', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 640 });
-  await page.goto('/'); await layers(page); await edit(page, '02').click(); await chooseLibrary(page, 'Silk Wave');
+  await page.goto('/');await expandLayerControls(page); await layers(page); await edit(page, '02').click(); await chooseLibrary(page, 'Silk Wave');
   await openInspector(page, 'カラー・動き');
   const width = page.getByRole('slider', { name: '線の太さ', exact: true });
   await expect(width).toHaveAttribute('min', '0.1'); await expect(width).toHaveAttribute('max', '5');

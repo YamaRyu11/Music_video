@@ -63,7 +63,7 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
       <fieldset disabled={disabled} className="design-fields">
         {tab === 'color' && <>
           <div className="layer-edit-target"><strong>レイヤー{layerNumber}を編集中</strong><span>{targetStyle?.title ?? 'スタイル未設定'}</span></div>
-          <InspectorSection title="カラー設定" {...section('color',true)}>
+          <InspectorSection title="カラー設定" {...section('color',false)}>
           <PalettePicker primary={controls.color} secondary={controls.secondaryColor} disabled={disabled} onChoose={p => updateControls({color:p.primary,secondaryColor:p.secondary})}/>
           <div className="color-control"><label>メインカラー</label><div className="swatches">{colors.map(c => <button key={c} title={c} aria-label={`カラー ${c}`} aria-pressed={controls.color === c} className={`swatch ${controls.color === c ? 'chosen' : ''}`} style={{ backgroundColor: c }} onClick={() => updateControls({ color: c })}>{controls.color === c && <Check size={13} />}</button>)}<label className="custom-color" title="カスタムカラー"><span>＋</span><ColorInput label="カスタムカラー" value={controls.color} disabled={disabled} onChange={v => updateControls({ color: v })} /></label></div></div>
           <div className="design-grid color-detail"><ColorField label="サブカラー" value={controls.secondaryColor} onChange={v => updateControls({ secondaryColor: v })} /></div>
@@ -83,7 +83,7 @@ export function Customizer({ settings, onChange, selectedLayer, activeTab: tab, 
           <fieldset disabled={!lineWidthEnabled} className="line-width-control"><Slider label="線の太さ" defaultValue={defaults.lineWidth} value={controls.lineWidth} min={.1} max={5} step={.05} onChange={v => updateControls({ lineWidth: v })} /></fieldset>
           <p className="field-note">{lineWidthEnabled ? lineWidthHelp(controls.style) : controls.style === 'none'
             ? 'スタイルを選ぶと、対応する線の太さを調整できます。' : '面で構成するスタイルのため、線の太さは適用されません。'}</p>
-          <InspectorSection title="エフェクト" {...section('effects',true)}>
+          <InspectorSection title="エフェクト" {...section('effects',false)}>
             <Slider label="光の広がり" defaultValue={defaults.glow} value={controls.glow} min={0} max={1} onChange={v => updateControls({ glow: v })} />
           <Slider label="映像のガウスぼかし" defaultValue={defaults.blur} value={controls.blur} min={0} max={80} step={1} scale={1} suffix=" px" onChange={v=>updateControls({blur:v})}/>
           <p className="field-note">選択した映像だけをぼかします。単位は出力動画のpxです。</p>

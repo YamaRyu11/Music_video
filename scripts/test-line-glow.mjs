@@ -1,3 +1,4 @@
+import {expandLayerControls} from './inspector.mjs';
 import {_electron as electron,expect} from '@playwright/test';
 import {mkdtemp,mkdir,readFile,rm,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';

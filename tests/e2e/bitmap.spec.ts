@@ -1,10 +1,11 @@
+import {expandLayerControls} from './inspector';
 import { openInspector } from './inspector';
 import { test, expect, type Page } from '@playwright/test';
 
 test.use({ viewport: { width: 900, height: 640 } });
 
 async function openBitmapPanel(page: Page) {
-  await page.goto('/');
+  await page.goto('/');await expandLayerControls(page);
   // Neutral graphics keep pixel measurements about the bitmap, not the accent palette.
   await page.getByLabel('カスタムカラー', { exact: true }).fill('#ffffff');
   await page.getByLabel('サブカラー', { exact: true }).fill('#ffffff');

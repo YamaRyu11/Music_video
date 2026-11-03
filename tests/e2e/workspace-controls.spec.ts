@@ -22,12 +22,14 @@ test('text preview gestures update horizontal position and font size while backg
  const size=page.getByRole('slider',{name:'文字サイズ',exact:true});await drag(page,'right',.12,-.08,true);expect(Number(await size.inputValue())).toBeGreaterThan(42);
  await page.getByRole('button',{name:'背景色を編集',exact:true}).click();await expect(page.locator('.preview-stage canvas')).toHaveAttribute('data-transformable','false');
 });
-test('color and effects sections retain independent open states and retain values when closed',async({page})=>{
- await page.goto('/');const section=(name:string)=>page.locator('details').filter({has:page.locator('summary').filter({hasText:name})});
- await page.getByRole('slider',{name:'映像のガウスぼかし',exact:true}).fill('12');await section('カラー設定').locator('summary').click();await section('エフェクト').locator('summary').click();
+test('all inspector sections start closed on both cards and retain independent values and open states',async({page})=>{
+ await page.setViewportSize({width:900,height:640});await page.goto('/');const section=(name:string)=>page.locator('details').filter({has:page.locator('summary').filter({hasText:name})});
+ for(const card of ['01','02']){await page.getByRole('button',{name:`レイヤー${card}を編集`,exact:true}).click();for(const title of ['カラー設定','エフェクト','サイズ・位置'])await expect(section(title)).not.toHaveAttribute('open','');}
+ await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await section('カラー設定').locator('summary').click();await section('エフェクト').locator('summary').click();await page.getByRole('slider',{name:'映像のガウスぼかし',exact:true}).fill('12');await section('エフェクト').locator('summary').click();
  await expect(page.getByRole('slider',{name:'映像のガウスぼかし',exact:true})).not.toBeVisible();
- await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await expect(section('カラー設定')).toHaveAttribute('open','');await expect(section('エフェクト')).toHaveAttribute('open','');
- await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await expect(section('カラー設定')).not.toHaveAttribute('open','');await section('エフェクト').locator('summary').click();await expect(page.getByRole('slider',{name:'映像のガウスぼかし',exact:true})).toHaveValue('12');
+ await page.getByRole('button',{name:'レイヤー02を編集',exact:true}).click();await expect(section('カラー設定')).not.toHaveAttribute('open','');await expect(section('エフェクト')).not.toHaveAttribute('open','');
+ await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();await expect(section('カラー設定')).toHaveAttribute('open','');await expect(section('エフェクト')).not.toHaveAttribute('open','');await section('エフェクト').locator('summary').click();await expect(page.getByRole('slider',{name:'映像のガウスぼかし',exact:true})).toHaveValue('12');
+ await expect(page.locator('.export-button')).toBeInViewport({ratio:1});
 });
 test('export dialog presets, advanced settings, cancel and session persistence work in browser',async({page})=>{
  await page.setViewportSize({width:900,height:640});await page.goto('/');await page.getByRole('button',{name:'書き出し設定を開く',exact:true}).click();const dialog=page.getByRole('dialog',{name:'書き出し設定',exact:true});

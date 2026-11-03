@@ -1,10 +1,11 @@
+import {expandLayerControls} from './inspector';
 import { openInspector } from './inspector';
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
 
 test('sample analysis, playback, seeking, styles and portrait preview work', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/');
+  await page.goto('/');await expandLayerControls(page);
   await expect(page.getByRole('heading', { name: '音楽を、映像に。' })).toBeVisible();
   await page.getByRole('button', { name: 'サンプル音源で試す' }).click();
   await expect(page.locator('.drop-zone strong')).toContainText('Midnight Bloom.wav');
@@ -35,7 +36,7 @@ test('sample analysis, playback, seeking, styles and portrait preview work', asy
 
 test('new styles, grading, layer blending and independent typography change the actual preview', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/');
+  await page.goto('/');await expandLayerControls(page);
   await page.getByRole('button', { name: 'サンプル音源で試す' }).click();
   await expect(page.locator('.drop-zone strong')).toContainText('Midnight Bloom.wav');
   await page.getByRole('slider', { name: '再生位置' }).fill('2');
@@ -99,7 +100,7 @@ test('new styles, grading, layer blending and independent typography change the 
 });
 
 test('imports a WAV file and rejects a non-audio file without losing the source', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/');await expandLayerControls(page);
   await page.getByLabel('音源ファイル').setInputFiles(path.resolve('public/demo.wav'));
   await expect(page.locator('.drop-zone strong')).toHaveText('demo.wav');
   await page.getByLabel('音源ファイル').setInputFiles({ name: 'wrong.txt', mimeType: 'text/plain', buffer: Buffer.from('no audio') });

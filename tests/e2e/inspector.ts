@@ -8,3 +8,14 @@ export async function openInspector(page: Page, name: string) {
 }
 
 export async function openSection(page:Page,title:string) { const section=page.locator('details').filter({has:page.locator('summary').filter({hasText:title})});if(await section.getAttribute('open')===null)await section.locator('summary').click(); }
+
+export async function expandLayerControls(page:Page) {
+  for (const number of ['01','02']) {
+    await page.getByRole('button',{name:`レイヤー${number}を編集`,exact:true}).click();
+    for (const title of ['カラー設定','エフェクト']) {
+      const section=page.locator('details').filter({has:page.locator('summary').filter({hasText:title})});
+      if(await section.getAttribute('open')===null)await section.locator('summary').click();
+    }
+  }
+  await page.getByRole('button',{name:'レイヤー01を編集',exact:true}).click();
+}
